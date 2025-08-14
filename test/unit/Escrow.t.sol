@@ -26,7 +26,7 @@ import {IDualGovernance} from "contracts/interfaces/IDualGovernance.sol";
 import {IWithdrawalQueue} from "contracts/interfaces/IWithdrawalQueue.sol";
 
 import {StETHMock} from "scripts/lido-mocks/StETHMock.sol";
-import {WstETHMock} from "test/mocks/WstETHMock.sol";
+import {WstETHMock} from "scripts/lido-mocks/WstETHMock.sol";
 import {WithdrawalQueueMock} from "test/mocks/WithdrawalQueueMock.sol";
 import {UnitTest} from "test/utils/unit-test.sol";
 import {Random} from "test/utils/random.sol";
