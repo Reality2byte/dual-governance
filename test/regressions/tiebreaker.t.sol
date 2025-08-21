@@ -165,72 +165,97 @@ contract TiebreakerRegressionTest is DGRegressionTestSetup {
         for (uint256 i = 0; i < subTiebreakers.length; ++i) {
             TiebreakerSubCommittee tiebreakerSubCommittee = TiebreakerSubCommittee(subTiebreakers[i]);
             uint256 quorum = tiebreakerSubCommittee.getQuorum();
-            address[] memory members = tiebreakerSubCommittee.getMembers();
-
-            address[] memory membersToRemove = new address[](1);
-            membersToRemove[0] = members[members.length - 1];
-
-            address[] memory membersToAdd = new address[](1);
-            membersToAdd[0] = makeAddr("memberToAdd");
-
-            ExternalCall[] memory calls =
-                _prepareCallsForMemberRotation(membersToRemove, membersToAdd, address(tiebreakerSubCommittee), quorum);
 
             uint256 proposalId;
+            ExternalCall[] memory calls;
+            address[] memory membersToRemove;
+            address[] memory membersToAdd;
 
-            proposalId =
-                _submitProposalByAdminProposer(calls, "DAO does regular stuff on potentially dangerous contract");
-            _assertProposalSubmitted(proposalId);
-            _assertSubmittedProposalData(proposalId, calls);
+            _step("1. Prepare calls for member rotation and submit proposal");
+            {
+                address[] memory members = tiebreakerSubCommittee.getMembers();
 
-            _wait(_getAfterSubmitDelay());
-            _assertCanSchedule(proposalId, true);
-            _scheduleProposal(proposalId);
-            _assertProposalScheduled(proposalId);
+                membersToRemove = new address[](1);
+                membersToRemove[0] = members[members.length - 1];
 
-            _wait(_getAfterScheduleDelay());
+                membersToAdd = new address[](1);
+                membersToAdd[0] = makeAddr("memberToAdd");
 
-            _executeProposal(proposalId);
-            _assertProposalExecuted(proposalId);
+                calls = _prepareCallsForMemberRotation(
+                    membersToRemove, membersToAdd, address(tiebreakerSubCommittee), quorum
+                );
+                proposalId = _submitProposalByAdminProposer(calls, "Tiebreaker subcommittee rotation");
 
-            assertTrue(tiebreakerSubCommittee.isMember(membersToAdd[0]));
-            assertFalse(tiebreakerSubCommittee.isMember(membersToRemove[0]));
-            assertEq(tiebreakerSubCommittee.getQuorum(), quorum);
+                _assertProposalSubmitted(proposalId);
+                _assertSubmittedProposalData(proposalId, calls);
+            }
+
+            _step("2. Schedule proposal");
+            {
+                _wait(_getAfterSubmitDelay());
+                _assertCanSchedule(proposalId, true);
+                _scheduleProposal(proposalId);
+                _assertProposalScheduled(proposalId);
+            }
+
+            _step("3. Execute proposal");
+            {
+                _wait(_getAfterScheduleDelay());
+
+                _executeProposal(proposalId);
+                _assertProposalExecuted(proposalId);
+            }
+
+            _step("4. Verify member rotation");
+            {
+                assertTrue(tiebreakerSubCommittee.isMember(membersToAdd[0]));
+                assertFalse(tiebreakerSubCommittee.isMember(membersToRemove[0]));
+                assertEq(tiebreakerSubCommittee.getQuorum(), quorum);
+            }
         }
     }
 
     function testFork_TiebreakerCoreCommitteeMemberRotation_ByProposal_HappyPath() external {
         address[] memory tiebreakerCoreMembers = _coreTiebreaker.getMembers();
         uint256 quorum = _coreTiebreaker.getQuorum();
-
         address[] memory membersToRemove = new address[](1);
-        membersToRemove[0] = tiebreakerCoreMembers[tiebreakerCoreMembers.length - 1];
-
         address[] memory membersToAdd = new address[](1);
-        membersToAdd[0] = makeAddr("memberToAdd");
-
-        ExternalCall[] memory calls =
-            _prepareCallsForMemberRotation(membersToRemove, membersToAdd, address(_coreTiebreaker), quorum);
-
+        ExternalCall[] memory calls;
         uint256 proposalId;
 
-        proposalId = _submitProposalByAdminProposer(calls, "DAO does regular stuff on potentially dangerous contract");
-        _assertProposalSubmitted(proposalId);
-        _assertSubmittedProposalData(proposalId, calls);
+        _step("1. Prepare calls for member rotation and submit proposal");
+        {
+            membersToAdd[0] = makeAddr("memberToAdd");
+            membersToRemove[0] = tiebreakerCoreMembers[tiebreakerCoreMembers.length - 1];
+            calls = _prepareCallsForMemberRotation(membersToRemove, membersToAdd, address(_coreTiebreaker), quorum);
+            proposalId = _submitProposalByAdminProposer(calls, "Tiebreaker core committee rotation");
 
-        _wait(_getAfterSubmitDelay());
-        _assertCanSchedule(proposalId, true);
-        _scheduleProposal(proposalId);
-        _assertProposalScheduled(proposalId);
+            _assertProposalSubmitted(proposalId);
+            _assertSubmittedProposalData(proposalId, calls);
+        }
 
-        _wait(_getAfterScheduleDelay());
+        _step("2. Schedule proposal");
+        {
+            _wait(_getAfterSubmitDelay());
+            _assertCanSchedule(proposalId, true);
+            _scheduleProposal(proposalId);
+            _assertProposalScheduled(proposalId);
+        }
 
-        _executeProposal(proposalId);
-        _assertProposalExecuted(proposalId);
+        _step("3. Execute proposal");
+        {
+            _wait(_getAfterScheduleDelay());
 
-        assertTrue(_coreTiebreaker.isMember(membersToAdd[0]));
-        assertFalse(_coreTiebreaker.isMember(membersToRemove[0]));
-        assertEq(_coreTiebreaker.getQuorum(), quorum);
+            _executeProposal(proposalId);
+            _assertProposalExecuted(proposalId);
+        }
+
+        _step("4. Verify member rotation");
+        {
+            assertTrue(_coreTiebreaker.isMember(membersToAdd[0]));
+            assertFalse(_coreTiebreaker.isMember(membersToRemove[0]));
+            assertEq(_coreTiebreaker.getQuorum(), quorum);
+        }
     }
 
     function _pauseSealables(address[] memory sealableWithdrawalBlockers) internal {
