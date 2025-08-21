@@ -83,7 +83,7 @@ The following commands can be used to run different types of tests:
     >npm run test:regressions -- --load-accounts
     >```
 
-- **Run integration and regression tests on a newly deployed setup of the Dual Governance**
+- **Run scenario and regression tests on a newly deployed setup of the Dual Governance**
     ```sh
     npm run test:integration
     ```
