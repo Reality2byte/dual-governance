@@ -26,7 +26,6 @@ jobs:
           - id: integration
             display: "integration"
             command: "npm run test:integration -- --load-accounts"
-            deployArtifact: "deploy-artifact-mainnet.toml"
 
           - id: unit
             display: "unit"
