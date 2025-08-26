@@ -135,3 +135,43 @@ While these permissions do not pose direct risks to the DG mechanics, they could
 ### Possible Mitigation:
 
 This risk can be mitigated by registering the `EVMScriptExecutor` as a proposer in the DualGovernance system. In this setup, any actions affecting the protocol would need to be submitted as a Dual Governance proposal, giving stETH holders the opportunity to react to potential malicious actions by the DAO.
+
+
+## 10. `Escrow.getRageQuitSupport()` may be inflated due to locked unstETH finalization
+
+Dual Governance allows users to lock unfinalized unstETH withdrawal NFTs in the Veto Signalling Escrow. This ensures that even those who have already requested withdrawals can still participate in veto signalling and, if necessary, exit the protocol during a RageQuit.
+
+The value of [`Escrow.getRageQuitSupport()`](./specification.md#function-escrowgetragequitsupport) is calculated as:
+
+```math
+\frac{ \text{stETH.getPooledEtherByShares} (\text{lockedShares} + \text{unfinalizedShares}) + \text{finalizedETH} }{ \text{stETH.totalSupply()} + \text{finalizedETH} }
+```
+
+When an unstETH NFT [becomes finalized](https://docs.lido.fi/contracts/withdrawal-queue-erc721#finalization), two things happen:
+- The stETH backing it is burned, reducing `stETH.totalSupply()`.
+- The NFT’s value stops participating in rebases.
+
+However, the `Escrow` continues to count the NFT as unfinalized, keeping its shares in the numerator. This creates a mismatch: the denominator (`stETH.totalSupply()`) has already shrunk, while the numerator still includes the NFT’s shares. As a result, `getRageQuitSupport()` may temporarily appear inflated.
+
+To address this, the trustless method [`Escrow.markUnstETHFinalized()`](./specification.md#function-escrowmarkunstethfinalized) was introduced. It accepts an array of unstETH ids locked in Escrow and updates accounting for each of them, reducing `unfinalizedShares` and increasing `finalizedETH` accordingly, correcting the inflated RageQuit support value. Anyone can call this method (though in practice the DAO is expected to), ensuring that `getRageQuitSupport()` reflects the correct support level and preventing rare edge cases where RageQuit could be entered due to inflated values.
+
+## 11. `Escrow.getRageQuitSupport()` is affected by `stETH.submit()` operations
+
+The value of `getRageQuitSupport()` depends on the ratio between assets locked in Escrow and the total supply of stETH. Since `stETH.submit()` mints new stETH against ETH deposits, it can immediately increase `stETH.totalSupply()`, thereby affecting the denominator of the formula used in [`Escrow.getRageQuitSupport()`](./specification.md#function-escrowgetragequitsupport).
+
+In theory, large `stETH.submit()` operations could reduce the apparent RageQuit support percentage, even though the locked amount in Escrow remains unchanged. For example, decreasing the RageQuit support by just 1 percentage point would require inflating the stETH total supply by more than 11%. This makes such manipulation prohibitively expensive.
+
+Additionally, the `stETH.submit()` method is subject to the [staking limit](https://docs.lido.fi/guides/lido-tokens-integration-guide#staking-rate-limits), which caps how much stETH can be minted in a given day (currently 150,000 ETH). This restriction prevents sudden large increases in supply, further limiting the feasibility of such an attack.
+
+## 12. `Escrow.claimUnstETH()` transaction failures due to already claimed NFTs
+
+The [`Escrow.claimUnstETH()`](./specification.md#function-escrowclaimunsteth) method allows anyone to claim finalized unstETH withdrawal NFTs that were previously locked in the Signalling Escrow during a RageQuit.
+
+If the method is called with any NFTs that have already been claimed, the transaction will revert. Because of this, a situation may arise where a user submits a transaction to claim multiple NFTs, but another party claims one of them first. In that case, the user’s transaction would fail entirely, while only the single NFT claimed in the other transaction would succeed. The user would then need to resubmit their transaction, which may lead to increased costs.
+
+This behavior does not pose a risk of funds loss, but it can make batch claims less efficient and increase the cost of participation.
+
+### Possible mitigations
+- Helper contract: A facade contract can be deployed at any time to wrap calls to `Escrow.claimUnstETH()`. It would filter out already-claimed NFTs before calling the original method, ensuring that claims always succeed.
+- One-by-one claims: Users can choose to claim NFTs individually, removing the possibility of partial failure.
+- Private transactions: Submitting transactions through private relays reduces the chance of another party intervening by claiming an NFT just before the user’s batch transaction is executed.
