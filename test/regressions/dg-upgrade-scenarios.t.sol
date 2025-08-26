@@ -276,29 +276,23 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
         _step("3. Deploy new Dual Governance and Tiebreaker");
         DualGovernance newDualGovernance;
         TiebreakerCoreCommittee newTiebreakerCoreCommittee;
-        DGSetupDeployConfig.Context memory previousDGDeployConfig;
         {
-            DGSetupDeployArtifacts.Context memory deployArtifact =
-                DGSetupDeployArtifacts.load(vm.envString("DEPLOY_ARTIFACT_FILE_NAME"));
-
-            previousDGDeployConfig = deployArtifact.deployConfig;
-
             // Deploy new Dual Governance
             DualGovernance.DualGovernanceComponents memory components = DualGovernance.DualGovernanceComponents({
-                timelock: deployArtifact.deployedContracts.timelock,
-                resealManager: deployArtifact.deployedContracts.resealManager,
-                configProvider: deployArtifact.deployedContracts.dualGovernanceConfigProvider
+                timelock: _dgDeployedContracts.timelock,
+                resealManager: _dgDeployedContracts.resealManager,
+                configProvider: _dgDeployedContracts.dualGovernanceConfigProvider
             });
 
             newDualGovernance = new DualGovernance(
                 components,
-                previousDGDeployConfig.dualGovernance.signallingTokens,
-                previousDGDeployConfig.dualGovernance.sanityCheckParams
+                _dgDeployConfig.dualGovernance.signallingTokens,
+                _dgDeployConfig.dualGovernance.sanityCheckParams
             );
 
-            TiebreakerDeployConfig.Context memory tiebreakerConfig = deployArtifact.deployConfig.tiebreaker;
-            tiebreakerConfig.chainId = deployArtifact.deployConfig.chainId;
-            tiebreakerConfig.owner = address(deployArtifact.deployedContracts.adminExecutor);
+            TiebreakerDeployConfig.Context memory tiebreakerConfig = _dgDeployConfig.tiebreaker;
+            tiebreakerConfig.chainId = _dgDeployConfig.chainId;
+            tiebreakerConfig.owner = address(_dgDeployedContracts.adminExecutor);
             tiebreakerConfig.dualGovernance = address(newDualGovernance);
 
             // Deploying new Tiebreaker
@@ -309,16 +303,15 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
         }
 
         _step("4. DAO proposes to upgrade the Dual Governance");
-
         {
-            ExternalCallsBuilder.Context memory upgradeDGCallsBuilder = ExternalCallsBuilder.create({callsCount: 8});
+            ExternalCallsBuilder.Context memory upgradeDGCallsBuilder = ExternalCallsBuilder.create({callsCount: 7});
 
             // 1. Set Tiebreaker activation timeout
             upgradeDGCallsBuilder.addCall(
                 address(newDualGovernance),
                 abi.encodeCall(
                     ITiebreaker.setTiebreakerActivationTimeout,
-                    previousDGDeployConfig.dualGovernance.tiebreakerActivationTimeout
+                    _dgDeployConfig.dualGovernance.tiebreakerActivationTimeout
                 )
             );
 
@@ -333,39 +326,30 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
                 address(newDualGovernance),
                 abi.encodeCall(
                     ITiebreaker.addTiebreakerSealableWithdrawalBlocker,
-                    previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
+                    _dgDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
                 )
             );
 
-            // 4. Add Validators Exit Bus Oracle as Tiebreaker withdrawal blocker
-            upgradeDGCallsBuilder.addCall(
-                address(newDualGovernance),
-                abi.encodeCall(
-                    ITiebreaker.addTiebreakerSealableWithdrawalBlocker,
-                    previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[1]
-                )
-            );
-
-            // 5. Register Aragon Voting as admin proposer
+            // 4. Register Aragon Voting as admin proposer
             upgradeDGCallsBuilder.addCall(
                 address(newDualGovernance),
                 abi.encodeCall(IDualGovernance.registerProposer, (address(_lido.voting), _getAdminExecutor()))
             );
 
-            // 6. Set Aragon Voting as proposals canceller
+            // 5. Set Aragon Voting as proposals canceller
             upgradeDGCallsBuilder.addCall(
                 address(newDualGovernance), abi.encodeCall(IDualGovernance.setProposalsCanceller, address(_lido.voting))
             );
 
-            // 7. Set reseal committee
+            // 6. Set reseal committee
             upgradeDGCallsBuilder.addCall(
                 address(newDualGovernance),
                 abi.encodeCall(
-                    IDualGovernance.setResealCommittee, address(previousDGDeployConfig.dualGovernance.resealCommittee)
+                    IDualGovernance.setResealCommittee, address(_dgDeployConfig.dualGovernance.resealCommittee)
                 )
             );
 
-            // 8. Upgrade Dual Governance
+            // 7. Upgrade Dual Governance
             upgradeDGCallsBuilder.addCall(
                 address(_timelock), abi.encodeCall(ITimelock.setGovernance, address(newDualGovernance))
             );
@@ -413,17 +397,13 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
             ITiebreaker.TiebreakerDetails memory tiebreakerDetails = newDualGovernance.getTiebreakerDetails();
             assertEq(
                 tiebreakerDetails.tiebreakerActivationTimeout,
-                previousDGDeployConfig.dualGovernance.tiebreakerActivationTimeout
+                _dgDeployConfig.dualGovernance.tiebreakerActivationTimeout
             );
             assertEq(tiebreakerDetails.tiebreakerCommittee, address(newTiebreakerCoreCommittee));
-            assertEq(tiebreakerDetails.sealableWithdrawalBlockers.length, 2);
+            assertEq(tiebreakerDetails.sealableWithdrawalBlockers.length, 1);
             assertEq(
                 tiebreakerDetails.sealableWithdrawalBlockers[0],
-                previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
-            );
-            assertEq(
-                tiebreakerDetails.sealableWithdrawalBlockers[1],
-                previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[1]
+                _dgDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
             );
 
             assertEq(newDualGovernance.getProposers().length, 1);
@@ -434,7 +414,8 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
             assertEq(newDualGovernance.getProposalsCanceller(), address(_lido.voting));
 
             assertEq(
-                newDualGovernance.getResealCommittee(), address(previousDGDeployConfig.dualGovernance.resealCommittee)
+                newDualGovernance.getResealCommittee(),
+                address(_dgDeployedContracts.dualGovernance.getResealCommittee())
             );
             assertEq(_timelock.getGovernance(), address(newDualGovernance));
         }
@@ -503,30 +484,24 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
         _step("3. Deploy new Dual Governance and Tiebreaker");
         DualGovernance newDualGovernance;
         TiebreakerCoreCommittee newTiebreakerCoreCommittee;
-        DGSetupDeployConfig.Context memory previousDGDeployConfig;
         ImmutableDualGovernanceConfigProvider newImmutableDualGovernanceConfigProvider;
         {
-            DGSetupDeployArtifacts.Context memory deployArtifact =
-                DGSetupDeployArtifacts.load(vm.envString("DEPLOY_ARTIFACT_FILE_NAME"));
-
-            previousDGDeployConfig = deployArtifact.deployConfig;
-
             // Deploy new Dual Governance
             DualGovernance.DualGovernanceComponents memory components = DualGovernance.DualGovernanceComponents({
-                timelock: deployArtifact.deployedContracts.timelock,
-                resealManager: deployArtifact.deployedContracts.resealManager,
-                configProvider: deployArtifact.deployedContracts.dualGovernanceConfigProvider
+                timelock: _dgDeployedContracts.timelock,
+                resealManager: _dgDeployedContracts.resealManager,
+                configProvider: _dgDeployedContracts.dualGovernanceConfigProvider
             });
 
             newDualGovernance = new DualGovernance(
                 components,
-                previousDGDeployConfig.dualGovernance.signallingTokens,
-                previousDGDeployConfig.dualGovernance.sanityCheckParams
+                _dgDeployConfig.dualGovernance.signallingTokens,
+                _dgDeployConfig.dualGovernance.sanityCheckParams
             );
 
-            TiebreakerDeployConfig.Context memory tiebreakerConfig = deployArtifact.deployConfig.tiebreaker;
-            tiebreakerConfig.chainId = deployArtifact.deployConfig.chainId;
-            tiebreakerConfig.owner = address(deployArtifact.deployedContracts.adminExecutor);
+            TiebreakerDeployConfig.Context memory tiebreakerConfig = _dgDeployConfig.tiebreaker;
+            tiebreakerConfig.chainId = _dgDeployConfig.chainId;
+            tiebreakerConfig.owner = address(_dgDeployedContracts.adminExecutor);
             tiebreakerConfig.dualGovernance = address(newDualGovernance);
 
             // Deploying new Tiebreaker
@@ -559,14 +534,14 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
         _step("4. DAO proposes to upgrade the Dual Governance");
         DualGovernance previousDualGovernance;
         {
-            ExternalCallsBuilder.Context memory upgradeDGCallsBuilder = ExternalCallsBuilder.create({callsCount: 9});
+            ExternalCallsBuilder.Context memory upgradeDGCallsBuilder = ExternalCallsBuilder.create({callsCount: 8});
 
             // 1. Set Tiebreaker activation timeout
             upgradeDGCallsBuilder.addCall(
                 address(newDualGovernance),
                 abi.encodeCall(
                     ITiebreaker.setTiebreakerActivationTimeout,
-                    previousDGDeployConfig.dualGovernance.tiebreakerActivationTimeout
+                    _dgDeployConfig.dualGovernance.tiebreakerActivationTimeout
                 )
             );
 
@@ -581,44 +556,35 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
                 address(newDualGovernance),
                 abi.encodeCall(
                     ITiebreaker.addTiebreakerSealableWithdrawalBlocker,
-                    previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
+                    _dgDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
                 )
             );
 
-            // 4. Add Validators Exit Bus Oracle as Tiebreaker withdrawal blocker
-            upgradeDGCallsBuilder.addCall(
-                address(newDualGovernance),
-                abi.encodeCall(
-                    ITiebreaker.addTiebreakerSealableWithdrawalBlocker,
-                    previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[1]
-                )
-            );
-
-            // 5. Register Aragon Voting as admin proposer
+            // 4. Register Aragon Voting as admin proposer
             upgradeDGCallsBuilder.addCall(
                 address(newDualGovernance),
                 abi.encodeCall(IDualGovernance.registerProposer, (address(_lido.voting), _getAdminExecutor()))
             );
 
-            // 6. Set Aragon Voting as proposals canceller
+            // 5. Set Aragon Voting as proposals canceller
             upgradeDGCallsBuilder.addCall(
                 address(newDualGovernance), abi.encodeCall(IDualGovernance.setProposalsCanceller, address(_lido.voting))
             );
 
-            // 7. Set reseal committee
+            // 6. Set reseal committee
             upgradeDGCallsBuilder.addCall(
                 address(newDualGovernance),
                 abi.encodeCall(
-                    IDualGovernance.setResealCommittee, address(previousDGDeployConfig.dualGovernance.resealCommittee)
+                    IDualGovernance.setResealCommittee, address(_dgDeployConfig.dualGovernance.resealCommittee)
                 )
             );
 
-            // 8. Upgrade Dual Governance
+            // 7. Upgrade Dual Governance
             upgradeDGCallsBuilder.addCall(
                 address(_timelock), abi.encodeCall(ITimelock.setGovernance, address(newDualGovernance))
             );
 
-            // 9. Set new ImmutableDualGovernanceConfigProvider
+            // 8. Set new ImmutableDualGovernanceConfigProvider
             upgradeDGCallsBuilder.addCall(
                 address(_dgDeployedContracts.dualGovernance),
                 abi.encodeCall(IDualGovernance.setConfigProvider, newImmutableDualGovernanceConfigProvider)
@@ -669,17 +635,13 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
             ITiebreaker.TiebreakerDetails memory tiebreakerDetails = newDualGovernance.getTiebreakerDetails();
             assertEq(
                 tiebreakerDetails.tiebreakerActivationTimeout,
-                previousDGDeployConfig.dualGovernance.tiebreakerActivationTimeout
+                _dgDeployConfig.dualGovernance.tiebreakerActivationTimeout
             );
             assertEq(tiebreakerDetails.tiebreakerCommittee, address(newTiebreakerCoreCommittee));
-            assertEq(tiebreakerDetails.sealableWithdrawalBlockers.length, 2);
+            assertEq(tiebreakerDetails.sealableWithdrawalBlockers.length, 1);
             assertEq(
                 tiebreakerDetails.sealableWithdrawalBlockers[0],
-                previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
-            );
-            assertEq(
-                tiebreakerDetails.sealableWithdrawalBlockers[1],
-                previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[1]
+                _dgDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
             );
 
             assertEq(newDualGovernance.getProposers().length, 1);
@@ -689,9 +651,7 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
 
             assertEq(newDualGovernance.getProposalsCanceller(), address(_lido.voting));
 
-            assertEq(
-                newDualGovernance.getResealCommittee(), address(previousDGDeployConfig.dualGovernance.resealCommittee)
-            );
+            assertEq(newDualGovernance.getResealCommittee(), address(_dgDeployConfig.dualGovernance.resealCommittee));
             assertEq(_timelock.getGovernance(), address(newDualGovernance));
 
             assertEq(
@@ -773,29 +733,23 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
         _step("4. Deploy new Dual Governance and Tiebreaker");
         DualGovernance newDualGovernance;
         TiebreakerCoreCommittee newTiebreakerCoreCommittee;
-        DGSetupDeployConfig.Context memory previousDGDeployConfig;
         {
-            DGSetupDeployArtifacts.Context memory deployArtifact =
-                DGSetupDeployArtifacts.load(vm.envString("DEPLOY_ARTIFACT_FILE_NAME"));
-
-            previousDGDeployConfig = deployArtifact.deployConfig;
-
             // Deploy new Dual Governance
             DualGovernance.DualGovernanceComponents memory components = DualGovernance.DualGovernanceComponents({
-                timelock: deployArtifact.deployedContracts.timelock,
-                resealManager: deployArtifact.deployedContracts.resealManager,
-                configProvider: deployArtifact.deployedContracts.dualGovernanceConfigProvider
+                timelock: _dgDeployedContracts.timelock,
+                resealManager: _dgDeployedContracts.resealManager,
+                configProvider: _dgDeployedContracts.dualGovernanceConfigProvider
             });
 
             newDualGovernance = new DualGovernance(
                 components,
-                previousDGDeployConfig.dualGovernance.signallingTokens,
-                previousDGDeployConfig.dualGovernance.sanityCheckParams
+                _dgDeployConfig.dualGovernance.signallingTokens,
+                _dgDeployConfig.dualGovernance.sanityCheckParams
             );
 
-            TiebreakerDeployConfig.Context memory tiebreakerConfig = deployArtifact.deployConfig.tiebreaker;
-            tiebreakerConfig.chainId = deployArtifact.deployConfig.chainId;
-            tiebreakerConfig.owner = address(deployArtifact.deployedContracts.adminExecutor);
+            TiebreakerDeployConfig.Context memory tiebreakerConfig = _dgDeployConfig.tiebreaker;
+            tiebreakerConfig.chainId = _dgDeployConfig.chainId;
+            tiebreakerConfig.owner = address(_dgDeployedContracts.adminExecutor);
             tiebreakerConfig.dualGovernance = address(newDualGovernance);
 
             // Deploying new Tiebreaker
@@ -815,7 +769,7 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
             Duration emergencyModeDuration = Durations.from(30 days);
 
             ExternalCallsBuilder.Context memory upgradeDGAndExtendEmergencyProtectionCallsBuilder =
-                ExternalCallsBuilder.create({callsCount: 13});
+                ExternalCallsBuilder.create({callsCount: 12});
 
             // 1. Deactivate emergency mode
             upgradeDGAndExtendEmergencyProtectionCallsBuilder.addCall(
@@ -849,7 +803,7 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
                 address(newDualGovernance),
                 abi.encodeCall(
                     ITiebreaker.setTiebreakerActivationTimeout,
-                    (previousDGDeployConfig.dualGovernance.tiebreakerActivationTimeout)
+                    (_dgDeployConfig.dualGovernance.tiebreakerActivationTimeout)
                 )
             );
 
@@ -864,39 +818,30 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
                 address(newDualGovernance),
                 abi.encodeCall(
                     ITiebreaker.addTiebreakerSealableWithdrawalBlocker,
-                    previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
+                    _dgDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
                 )
             );
 
-            // 9. Add Validators Exit Bus Oracle as Tiebreaker withdrawal blocker
-            upgradeDGAndExtendEmergencyProtectionCallsBuilder.addCall(
-                address(newDualGovernance),
-                abi.encodeCall(
-                    ITiebreaker.addTiebreakerSealableWithdrawalBlocker,
-                    previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[1]
-                )
-            );
-
-            // 10. Register Aragon Voting as admin proposer
+            // 9. Register Aragon Voting as admin proposer
             upgradeDGAndExtendEmergencyProtectionCallsBuilder.addCall(
                 address(newDualGovernance),
                 abi.encodeCall(IDualGovernance.registerProposer, (address(_lido.voting), _getAdminExecutor()))
             );
 
-            // 11. Set Aragon Voting as proposals canceller
+            // 10. Set Aragon Voting as proposals canceller
             upgradeDGAndExtendEmergencyProtectionCallsBuilder.addCall(
                 address(newDualGovernance), abi.encodeCall(IDualGovernance.setProposalsCanceller, address(_lido.voting))
             );
 
-            // 12. Set reseal committee
+            // 11. Set reseal committee
             upgradeDGAndExtendEmergencyProtectionCallsBuilder.addCall(
                 address(newDualGovernance),
                 abi.encodeCall(
-                    IDualGovernance.setResealCommittee, address(previousDGDeployConfig.dualGovernance.resealCommittee)
+                    IDualGovernance.setResealCommittee, address(_dgDeployConfig.dualGovernance.resealCommittee)
                 )
             );
 
-            // 13. Upgrade Dual Governance
+            // 12. Upgrade Dual Governance
             upgradeDGAndExtendEmergencyProtectionCallsBuilder.addCall(
                 address(_timelock), abi.encodeCall(ITimelock.setGovernance, address(newDualGovernance))
             );
@@ -952,17 +897,13 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
             ITiebreaker.TiebreakerDetails memory tiebreakerDetails = newDualGovernance.getTiebreakerDetails();
             assertEq(
                 tiebreakerDetails.tiebreakerActivationTimeout,
-                previousDGDeployConfig.dualGovernance.tiebreakerActivationTimeout
+                _dgDeployConfig.dualGovernance.tiebreakerActivationTimeout
             );
             assertEq(tiebreakerDetails.tiebreakerCommittee, address(newTiebreakerCoreCommittee));
-            assertEq(tiebreakerDetails.sealableWithdrawalBlockers.length, 2);
+            assertEq(tiebreakerDetails.sealableWithdrawalBlockers.length, 1);
             assertEq(
                 tiebreakerDetails.sealableWithdrawalBlockers[0],
-                previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
-            );
-            assertEq(
-                tiebreakerDetails.sealableWithdrawalBlockers[1],
-                previousDGDeployConfig.dualGovernance.sealableWithdrawalBlockers[1]
+                _dgDeployConfig.dualGovernance.sealableWithdrawalBlockers[0]
             );
 
             assertEq(newDualGovernance.getProposers().length, 1);
@@ -972,9 +913,7 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
 
             assertEq(newDualGovernance.getProposalsCanceller(), address(_lido.voting));
 
-            assertEq(
-                newDualGovernance.getResealCommittee(), address(previousDGDeployConfig.dualGovernance.resealCommittee)
-            );
+            assertEq(newDualGovernance.getResealCommittee(), address(_dgDeployConfig.dualGovernance.resealCommittee));
             assertEq(_timelock.getGovernance(), address(newDualGovernance));
         }
 
