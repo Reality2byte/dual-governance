@@ -75,29 +75,65 @@ jobs:
       - name: Download vetoers accounts
         run: node test/regressions/regression-test-utils/download_vetoers.js
 
-      - name: Run regressions + integration in parallel (shared anvil)
+      - name: Run regressions + integration in parallel
         shell: bash
+        continue-on-error: true
         env:
-          DEPLOY_ARTIFACT_FILE_NAME: deploy-artifact-mainnet.toml
           MAINNET_RPC_URL: ${{ env.ANVIL_RPC_URL }}
+          DEPLOY_ARTIFACT_FILE_NAME: deploy-artifact-mainnet.toml
         run: |
-          set -uo pipefail
+          set -u
 
-          ( echo "[regressions] starting..."
-            npm run test:regressions
-          ) & PID_REG=$!
+          (
+            set -o pipefail
+            stdbuf -oL -eL npm run test:regressions 2>&1 \
+              | tee reg.log \
+              | sed -u 's/^/[regressions] /'
+            echo "${PIPESTATUS[0]}" > reg.rc
+          ) &
 
-          ( echo "[integration] starting..."
+          (
+            set -o pipefail
             env -u DEPLOY_ARTIFACT_FILE_NAME \
-              npm run test:integration
-          ) & PID_INT=$!
+              stdbuf -oL -eL npm run test:integration 2>&1 \
+              | tee int.log \
+              | sed -u 's/^/[integration] /'
+            echo "${PIPESTATUS[0]}" > int.rc
+          ) &
 
-          wait $PID_REG; RC_REG=$?
-          wait $PID_INT; RC_INT=$?
+          wait
 
-          echo "[regressions] exit code: $RC_REG"
-          echo "[integration] exit code: $RC_INT"
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-${{ github.run_id }}
+          path: |
+            reg.log
+            int.log
+            anvil.log
+            reg.rc
+            int.rc
+          retention-days: 7
 
-          if [ $RC_REG -ne 0 ] || [ $RC_INT -ne 0 ]; then
+      - name: Show logs summary (tail)
+        if: always()
+        shell: bash
+        run: |
+          echo "::group::regressions (last 200 lines)"
+          tail -n 200 reg.log || true
+          echo "::endgroup::"
+          echo "::group::integration (last 200 lines)"
+          tail -n 200 int.log || true
+          echo "::endgroup::"
+
+      - name: Fail if any suite failed
+        shell: bash
+        run: |
+          RC_REG=$(cat reg.rc 2>/dev/null || echo 1)
+          RC_INT=$(cat int.rc 2>/dev/null || echo 1)
+          echo "regressions RC=$RC_REG, integration RC=$RC_INT" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$RC_REG" -ne 0 ] || [ "$RC_INT" -ne 0 ]; then
+            echo "At least one suite failed."
             exit 1
           fi
