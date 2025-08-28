@@ -5,7 +5,7 @@ set -e
 COMMANDS_DIR="$(dirname "$(realpath "$0")")"
 source "$COMMANDS_DIR/lib/env-utils.sh"
 
-validate_env "DEPLOY_ARTIFACT_FILE_NAME" "MAINNET_RPC_URL"
+validate_env "MAINNET_RPC_URL"
 
 # Check for --load-accounts flag
 if [[ $# -gt 0 && "$1" == "--load-accounts" ]]; then
