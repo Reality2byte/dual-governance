@@ -21,11 +21,9 @@ import {State as EscrowState} from "contracts/libraries/EscrowState.sol";
 
 import {EmergencyProtectedTimelock} from "contracts/EmergencyProtectedTimelock.sol";
 import {
-    DGSetupDeployConfig,
-    DGSetupDeployArtifacts,
-    DGSetupDeployedContracts,
-    TimelockContractDeployConfig
-} from "../utils/contracts-deployment.sol";
+    DGSetupDeployConfig, DGSetupDeployArtifacts, DGSetupDeployedContracts
+} from "scripts/utils/deployment/Setup.sol";
+import {TimelockContractDeployConfig} from "scripts/utils/deployment/Timelock.sol";
 
 import {TiebreakerDeployConfig, TiebreakerSubCommitteeDeployConfig} from "../utils/deployment/Tiebreaker.sol";
 
