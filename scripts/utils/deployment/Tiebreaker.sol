@@ -23,6 +23,8 @@ using ConfigFileBuilder for ConfigFileBuilder.Context;
 // solhint-disable-next-line const-name-snakecase
 Vm constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
+string constant DEFAULT_ROOT_KEY = "tiebreaker";
+
 struct TiebreakerSubCommitteeDeployConfig {
     address[] members;
     uint256 quorum;
@@ -33,7 +35,6 @@ library TiebreakerDeployConfig {
     error InvalidParameter(string parameter);
 
     struct Context {
-        uint256 chainId;
         address owner;
         address dualGovernance;
         uint256 quorum;
@@ -41,12 +42,17 @@ library TiebreakerDeployConfig {
         TiebreakerSubCommitteeDeployConfig[] committees;
     }
 
+    function load(string memory configFilePath) internal view returns (Context memory) {
+        return load(configFilePath, "");
+    }
+
     function load(
         string memory configFilePath,
         string memory configRootKey
     ) internal view returns (Context memory ctx) {
-        string memory $ = configRootKey.root();
         ConfigFileReader.Context memory file = ConfigFileReader.load(configFilePath);
+        string memory configRoot = configRootKey.root();
+        string memory $ = configRoot.key(DEFAULT_ROOT_KEY);
 
         ctx.quorum = file.readUint($.key("quorum"));
         ctx.executionDelay = file.readDuration($.key("execution_delay"));
@@ -68,27 +74,51 @@ library TiebreakerDeployConfig {
         }
     }
 
-    function validate(Context memory ctx) internal view {
-        if (ctx.chainId != block.chainid) {
-            revert InvalidChainId(block.chainid, ctx.chainId);
+    function loadSubCommittees(
+        string memory configFilePath,
+        string memory configRootKey
+    ) internal view returns (Context memory ctx) {
+        ConfigFileReader.Context memory file = ConfigFileReader.load(configFilePath);
+        string memory configRoot = configRootKey.root();
+        string memory $ = configRoot.key(DEFAULT_ROOT_KEY);
+
+        uint256 committeesCount = file.readUint($.key("committees_count"));
+        ctx.committees = new TiebreakerSubCommitteeDeployConfig[](committeesCount);
+
+        for (uint256 i = 0; i < committeesCount; ++i) {
+            string memory $committees = $.index("committees", i);
+            ctx.committees[i].quorum = file.readUint($committees.key("quorum"));
+            ctx.committees[i].members = file.readAddressArray($committees.key("members"));
         }
 
+        if (file.keyExists($.key("owner"))) {
+            ctx.owner = file.readAddress($.key("owner"));
+        }
+    }
+
+    function validate(Context memory ctx) internal pure {
+        validateCoreCommittee(ctx);
+        validateSubCommittees(ctx);
+    }
+
+    function validateCoreCommittee(Context memory ctx) internal pure {
         if (ctx.quorum == 0 || ctx.quorum > ctx.committees.length) {
             revert InvalidParameter("tiebreaker.quorum");
         }
-
-        for (uint256 i = 0; i < ctx.committees.length; ++i) {
-            if (ctx.committees[i].quorum == 0 || ctx.committees[i].quorum > ctx.committees[i].members.length) {
-                revert InvalidParameter(string.concat("tiebreaker.committees[", vm.toString(i), "].quorum"));
-            }
-        }
-
         if (ctx.owner == address(0)) {
             revert InvalidParameter("tiebreaker.owner");
         }
 
         if (ctx.dualGovernance == address(0)) {
             revert InvalidParameter("tiebreaker.dual_governance");
+        }
+    }
+
+    function validateSubCommittees(Context memory ctx) internal pure {
+        for (uint256 i = 0; i < ctx.committees.length; ++i) {
+            if (ctx.committees[i].quorum == 0 || ctx.committees[i].quorum > ctx.committees[i].members.length) {
+                revert InvalidParameter(string.concat("tiebreaker.committees[", vm.toString(i), "].quorum"));
+            }
         }
     }
 

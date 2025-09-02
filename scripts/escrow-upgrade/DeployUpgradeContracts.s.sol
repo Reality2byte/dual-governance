@@ -69,7 +69,6 @@ contract DeployUpgradeContracts is Script {
 
         address adminExecutor = address(_deployArtifact.deployedContracts.adminExecutor);
 
-        _deployArtifact.deployConfig.tiebreaker.chainId = block.chainid;
         _deployArtifact.deployConfig.tiebreaker.owner = adminExecutor;
         _deployArtifact.deployConfig.tiebreaker.dualGovernance = address(dualGovernance);
 

@@ -6,10 +6,10 @@ pragma solidity 0.8.26;
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
 import {TimelockedGovernance} from "contracts/TimelockedGovernance.sol";
-import {TimelockedGovernanceDeployConfig} from "../utils/contracts-deployment.sol";
-import {DeployFiles} from "../utils/DeployFiles.sol";
+import {TimelockedGovernanceDeployConfig} from "scripts/utils/deployment/TimelockedGovernance.sol";
+import {DeployFiles} from "scripts/utils/DeployFiles.sol";
 
-contract DeployTG is Script {
+contract DeployTimelockedGovernance is Script {
     using TimelockedGovernanceDeployConfig for TimelockedGovernanceDeployConfig.Context;
 
     error ChainIdMismatch(uint256 actual, uint256 expected);
