@@ -14,7 +14,7 @@ import {Escrow} from "contracts/Escrow.sol";
 import {LidoUtils, DGScenarioTestSetup} from "../utils/integration-tests.sol";
 
 uint256 constant ACCURACY = 2 wei;
-uint256 constant WITHDRAWALS_BATCH_SIZE = 128;
+uint256 constant WITHDRAWALS_BATCH_SIZE = 10;
 uint256 constant POOL_ACCUMULATED_ERROR = 150 wei;
 
 contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
@@ -411,22 +411,30 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
 
             _requestWithdrawals(escrow);
 
+            console.log(_lido.withdrawalQueue.getLastFinalizedRequestId(), address(_lido.withdrawalQueue).balance);
             while (_lido.withdrawalQueue.getLastRequestId() != _lido.withdrawalQueue.getLastFinalizedRequestId()) {
                 _finalizeWithdrawalQueue();
             }
+            console.log(_lido.withdrawalQueue.getLastFinalizedRequestId(), address(_lido.withdrawalQueue).balance);
 
+            assertEq(_lido.withdrawalQueue.getLastRequestId(), _lido.withdrawalQueue.getLastFinalizedRequestId());
+            // Claim all the withdrawals in batches.
             while (escrow.getUnclaimedUnstETHIdsCount() > 0) {
                 escrow.claimNextWithdrawalsBatch(WITHDRAWALS_BATCH_SIZE);
             }
 
+            assertEq(escrow.getUnclaimedUnstETHIdsCount(), 0);
+
             uint256 totalETHAfter = address(escrow).balance;
             uint256 totalLockedStETHAfter = _lido.stETH.balanceOf(address(escrow));
             totalWithdrawnETH = totalETHAfter - totalETHBefore;
-
+            console.log("totalWithdrawnETH", totalWithdrawnETH);
+            console.log("totalLockedStETHBefore", totalLockedStETHBefore);
+            console.log("totalLockedStETHAfter", totalLockedStETHAfter);
             // During the RageQuit finalization of the batches each withdrawal NFT may loose 1-2 wei during
             // claiming due to share rate rounding error.
-            assertTrue(
-                totalLockedStETHBefore - totalLockedStETHAfter - totalWithdrawnETH <= 100 * POOL_ACCUMULATED_ERROR
+            assertApproxEqAbs(
+                totalLockedStETHBefore, totalLockedStETHAfter + totalWithdrawnETH, 100 * POOL_ACCUMULATED_ERROR
             );
 
             escrow.startRageQuitExtensionPeriod();
@@ -509,6 +517,7 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
         uint256 iteration = 0;
         uint256 maxIterations = 100;
         while (!escrowInstance.isWithdrawalsBatchesClosed()) {
+            console.log("iteration", iteration);
             if (iteration > maxIterations) {
                 console.log("maxIterations exceeded while requesting withdrawals", iteration);
                 break;

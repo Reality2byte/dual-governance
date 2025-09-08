@@ -67,6 +67,10 @@ interface IWithdrawalQueue is IWithdrawalQueueBase {
 
     function unfinalizedStETH() external view returns (uint256);
 
+    function prefinalize(
+        uint256[] calldata _batches,
+        uint256 _maxShareRate
+    ) external view returns (uint256 ethToLock, uint256 sharesToBurn);
     function requestWithdrawalsWstETH(
         uint256[] calldata _amounts,
         address _owner
