@@ -387,8 +387,11 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
     }
 
     function _prepareVetoer(address vetoerCandidate, uint256 index) internal returns (address[] memory vetoers) {
-        if (vetoerCandidate == address(_getVetoSignallingEscrow()) || vetoerCandidate == address(_getRageQuitEscrow()))
-        {
+        if (
+            vetoerCandidate == address(_getVetoSignallingEscrow()) || vetoerCandidate == address(_getRageQuitEscrow())
+                || vetoerCandidate == address(_lido.withdrawalQueue) || vetoerCandidate == address(_lido.stETH)
+                || vetoerCandidate == address(_lido.wstETH) || vetoerCandidate == address(_lido.agent)
+        ) {
             return vetoers;
         }
 
