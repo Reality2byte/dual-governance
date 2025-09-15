@@ -50,6 +50,7 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
     mapping(address vetoer => uint256[] unStEthIds) private _lockedUnStEthIds;
     mapping(address vetoer => uint256[] unStEthIds) private _allVetoersUnstEthIds;
     mapping(address vetoer => uint256 totalClaimedETH) private _vetoersClaimedETH;
+    mapping(address vetoer => bool isUnique) private _uniqVetoersMap;
     Random.Context internal _random;
     uint256[] private _rebaseDeltaPercents;
 
@@ -209,9 +210,17 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
         uint256 totalVetoersCount = 0;
         address[][] memory preparedVetoerGroups = new address[][](originalVetoersCount);
 
+        uint256 uniqueVetoersCount = 0;
+
         for (uint256 i = 0; i < originalVetoersCount; ++i) {
             preparedVetoerGroups[i] = _prepareVetoer(_allVetoers[_lastVetoerIndex + i], _lastVetoerIndex + i);
             totalVetoersCount += preparedVetoerGroups[i].length;
+            for (uint256 j = 0; j < preparedVetoerGroups[i].length; ++j) {
+                if (!_uniqVetoersMap[preparedVetoerGroups[i][j]]) {
+                    _uniqVetoersMap[preparedVetoerGroups[i][j]] = true;
+                    uniqueVetoersCount++;
+                }
+            }
         }
 
         if (totalVetoersCount > originalVetoersCount) {
@@ -227,6 +236,8 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
                 vetoerIndex++;
             }
         }
+
+        vetoers = _arrayUniq(vetoers, uniqueVetoersCount);
 
         _lastVetoerIndex = lastVetoerIndexForCurrentRound + 1;
     }
@@ -288,7 +299,9 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
                 vetoersBalancesBefore[i] = vetoers[i].balance;
 
                 // Do not account for unstETH shares here as they will be count separately
-                vetoersStEthSharesBefore[i] = _lido.stETH.getSharesByPooledEth(vetoerStEthBalance) + vetoerWStEthBalance;
+                uint256 stETHLockedShares = vsEscrow.getVetoerDetails(vetoers[i]).stETHLockedShares.toUint256();
+                vetoersStEthSharesBefore[i] =
+                    _lido.stETH.getSharesByPooledEth(vetoerStEthBalance) + vetoerWStEthBalance + stETHLockedShares;
 
                 if (vetoerStEthBalance > 0) {
                     _lockStETH(vetoers[i], vetoerStEthBalance);
@@ -427,8 +440,11 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
     }
 
     function _prepareVetoer(address vetoerCandidate, uint256 index) internal returns (address[] memory vetoers) {
-        if (vetoerCandidate == address(_getVetoSignallingEscrow()) || vetoerCandidate == address(_getRageQuitEscrow()))
-        {
+        if (
+            vetoerCandidate == address(_getVetoSignallingEscrow()) || vetoerCandidate == address(_getRageQuitEscrow())
+                || vetoerCandidate == address(_lido.withdrawalQueue) || vetoerCandidate == address(_lido.stETH)
+                || vetoerCandidate == address(_lido.wstETH) || vetoerCandidate == address(_lido.agent)
+        ) {
             return vetoers;
         }
 
