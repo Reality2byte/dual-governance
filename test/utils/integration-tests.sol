@@ -470,8 +470,9 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
             }
         }
 
-        address[] memory sealableWithdrawalBlockers = new address[](1);
+        address[] memory sealableWithdrawalBlockers = new address[](2);
         sealableWithdrawalBlockers[0] = address(_lido.withdrawalQueue);
+        sealableWithdrawalBlockers[1] = address(_lido.vebo);
 
         config = DGSetupDeployConfig.Context({
             chainId: 1,

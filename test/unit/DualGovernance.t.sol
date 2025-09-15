@@ -32,12 +32,13 @@ import {ITiebreaker} from "contracts/interfaces/ITiebreaker.sol";
 import {IEscrowBase} from "contracts/interfaces/IEscrowBase.sol";
 
 import {UnitTest} from "test/utils/unit-test.sol";
-import {StETHMock} from "test/mocks/StETHMock.sol";
-import {WstETHMock} from "test/mocks/WstETHMock.sol";
 import {TimelockMock} from "test/mocks/TimelockMock.sol";
 import {WithdrawalQueueMock} from "test/mocks/WithdrawalQueueMock.sol";
 import {SealableMock} from "test/mocks/SealableMock.sol";
 import {computeAddress} from "test/utils/addresses.sol";
+
+import {StETHMock} from "scripts/lido-mocks/StETHMock.sol";
+import {WstETHMock} from "scripts/lido-mocks/WstETHMock.sol";
 
 contract DualGovernanceUnitTests is UnitTest {
     Executor private _executor = new Executor(address(this));

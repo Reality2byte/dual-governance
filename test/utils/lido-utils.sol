@@ -39,6 +39,7 @@ address constant MAINNET_ACCOUNTING_ORACLE = 0x852deD011285fe67063a08005c71a8569
 address constant MAINNET_EL_REWARDS_VAULT = 0x388C818CA8B9251b393131C08a736A67ccB19297;
 address constant MAINNET_WITHDRAWAL_VAULT = 0xB9D7934878B5FB9610B3fE8A5e441e8fad7E293f;
 address constant MAINNET_ORACLE_REPORT_SANITY_CHECKER = 0x6232397ebac4f5772e53285B26c47914E9461E75;
+address constant MAINNET_VEBO = 0x0De4Ea0184c2ad0BacA7183356Aea5B8d5Bf5c6e;
 
 address constant MAINNET_DAO_ACL = 0x9895F0F17cc1d1891b6f18ee0b483B6f221b37Bb;
 address constant MAINNET_LDO_TOKEN = 0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32;
@@ -59,6 +60,7 @@ address constant HOLESKY_ACCOUNTING_ORACLE = 0x4E97A3972ce8511D87F334dA17a2C3325
 address constant HOLESKY_EL_REWARDS_VAULT = 0xE73a3602b99f1f913e72F8bdcBC235e206794Ac8;
 address constant HOLESKY_WITHDRAWAL_VAULT = 0xF0179dEC45a37423EAD4FaD5fCb136197872EAd9;
 address constant HOLESKY_ORACLE_REPORT_SANITY_CHECKER = 0x80D1B1fF6E84134404abA18A628347960c38ccA7;
+address constant HOLESKY_VEBO = 0xffDDF7025410412deaa05E3E1cE68FE53208afcb;
 
 address constant HOLESKY_DAO_ACL = 0xfd1E42595CeC3E83239bf8dFc535250e7F48E0bC;
 address constant HOLESKY_LDO_TOKEN = 0x14ae7daeecdf57034f3E9db8564e46Dba8D97344;
@@ -79,6 +81,7 @@ address constant HOODI_ACCOUNTING_ORACLE = 0xcb883B1bD0a41512b42D2dB267F2A2cd919
 address constant HOODI_EL_REWARDS_VAULT = 0x9b108015fe433F173696Af3Aa0CF7CDb3E104258;
 address constant HOODI_WITHDRAWAL_VAULT = 0x4473dCDDbf77679A643BdB654dbd86D67F8d32f2;
 address constant HOODI_ORACLE_REPORT_SANITY_CHECKER = 0x26AED10459e1096d242ABf251Ff55f8DEaf52348;
+address constant HOODI_VEBO = 0x8664d394C2B3278F26A1B44B967aEf99707eeAB2;
 
 address constant HOODI_DAO_ACL = 0x78780e70Eae33e2935814a327f7dB6c01136cc62;
 address constant HOODI_LDO_TOKEN = 0xEf2573966D009CcEA0Fc74451dee2193564198dc;
@@ -99,6 +102,7 @@ library LidoUtils {
         IBurner burner;
         IHashConsensus hashConsensus;
         IWithdrawalQueue withdrawalQueue;
+        address vebo;
         IAccountingOracle accountingOracle;
         IOracleReportSanityChecker oracleReportSanityChecker;
         address elRewardsVault;
@@ -123,6 +127,7 @@ library LidoUtils {
         ctx.hashConsensus = IHashConsensus(MAINNET_HASH_CONSENSUS);
         ctx.accountingOracle = IAccountingOracle(MAINNET_ACCOUNTING_ORACLE);
         ctx.oracleReportSanityChecker = IOracleReportSanityChecker(MAINNET_ORACLE_REPORT_SANITY_CHECKER);
+        ctx.vebo = MAINNET_VEBO;
 
         ctx.elRewardsVault = MAINNET_EL_REWARDS_VAULT;
         ctx.withdrawalVault = MAINNET_WITHDRAWAL_VAULT;
@@ -142,6 +147,7 @@ library LidoUtils {
         ctx.withdrawalQueue = IWithdrawalQueue(HOLESKY_WITHDRAWAL_QUEUE);
         ctx.accountingOracle = IAccountingOracle(HOLESKY_ACCOUNTING_ORACLE);
         ctx.oracleReportSanityChecker = IOracleReportSanityChecker(HOLESKY_ORACLE_REPORT_SANITY_CHECKER);
+        ctx.vebo = HOLESKY_VEBO;
 
         ctx.elRewardsVault = HOLESKY_EL_REWARDS_VAULT;
         ctx.withdrawalVault = HOLESKY_WITHDRAWAL_VAULT;
@@ -161,6 +167,7 @@ library LidoUtils {
         ctx.withdrawalQueue = IWithdrawalQueue(HOODI_WITHDRAWAL_QUEUE);
         ctx.accountingOracle = IAccountingOracle(HOODI_ACCOUNTING_ORACLE);
         ctx.oracleReportSanityChecker = IOracleReportSanityChecker(HOODI_ORACLE_REPORT_SANITY_CHECKER);
+        ctx.vebo = HOODI_VEBO;
 
         ctx.elRewardsVault = HOODI_EL_REWARDS_VAULT;
         ctx.withdrawalVault = HOODI_WITHDRAWAL_VAULT;
