@@ -288,9 +288,8 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
                 vetoersBalancesBefore[i] = vetoers[i].balance;
 
                 // Do not account for unstETH shares here as they will be count separately
-                uint256 stETHLockedShares = vsEscrow.getVetoerDetails(vetoers[i]).stETHLockedShares.toUint256();
-                vetoersStEthSharesBefore[i] =
-                    _lido.stETH.getSharesByPooledEth(vetoerStEthBalance) + vetoerWStEthBalance + stETHLockedShares;
+
+                vetoersStEthSharesBefore[i] = _lido.stETH.getSharesByPooledEth(vetoerStEthBalance) + vetoerWStEthBalance;
 
                 if (vetoerStEthBalance > 0) {
                     _lockStETH(vetoers[i], vetoerStEthBalance);
