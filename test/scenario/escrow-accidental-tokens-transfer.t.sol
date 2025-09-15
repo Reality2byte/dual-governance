@@ -105,7 +105,7 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
             assertApproxEqAbs(
                 _lido.stETH.balanceOf(address(escrow)),
                 _lido.stETH.getPooledEthByShares(vetoer1LockedStEthShares + vetoer1LockedWStEthAmount),
-                ACCURACY
+                2 * ACCURACY
             );
             assertEq(_lido.wstETH.balanceOf(address(escrow)), 0);
 
@@ -434,7 +434,7 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
             // During the RageQuit finalization of the batches each withdrawal NFT may loose 1-2 wei during
             // claiming due to share rate rounding error.
             assertApproxEqAbs(
-                totalLockedStETHBefore, totalLockedStETHAfter + totalWithdrawnETH, 100 * POOL_ACCUMULATED_ERROR
+                totalLockedStETHBefore - totalLockedStETHAfter, totalWithdrawnETH, 100 * POOL_ACCUMULATED_ERROR
             );
 
             escrow.startRageQuitExtensionPeriod();

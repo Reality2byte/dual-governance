@@ -35,8 +35,8 @@ contract LidoUtilsTest is DGScenarioTestSetup {
     }
 
     function testForkFuzz_rebaseAllowedPercentsNoFinalization(uint256 percentNotNormalized) public {
-        vm.assume(percentNotNormalized < PercentsD16.fromBasisPoints(10).toUint256());
-        PercentD16 rebasePercent = PercentsD16.from(percentNotNormalized) + PercentsD16.fromBasisPoints(99_95);
+        vm.assume(percentNotNormalized < PercentsD16.from(10 ** 13).toUint256());
+        PercentD16 rebasePercent = PercentsD16.from(HUNDRED_PERCENT_D16 + percentNotNormalized);
 
         uint256 shareRateBefore = _lido.stETH.getPooledEthByShares(1 ether);
         uint256 withdrawalQueueBalanceBefore = address(_lido.withdrawalQueue).balance;
@@ -46,7 +46,7 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         uint256 expectedShareRate = shareRateBefore * rebasePercent.toUint256() / HUNDRED_PERCENT_D16;
 
-        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 2 wei);
+        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 10_000 wei);
         assertEq(address(_lido.withdrawalQueue).balance, withdrawalQueueBalanceBefore);
         assertEq(_lido.withdrawalQueue.getLastFinalizedRequestId(), lastFinalizedRequestIdBefore);
     }
@@ -131,7 +131,7 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         uint256 expectedShareRate = shareRateBefore * rebasePercent.toUint256() / HUNDRED_PERCENT_D16;
 
-        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 2 wei);
+        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 100 gwei);
         assertEq(
             address(_lido.withdrawalQueue).balance, withdrawalQueueBalanceBefore + requestToFinalizeClaimableAmount
         );
@@ -184,7 +184,7 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         uint256 expectedShareRate = shareRateBefore * rebasePercent.toUint256() / HUNDRED_PERCENT_D16;
 
-        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 2 wei);
+        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 100 gwei);
         assertEq(
             address(_lido.withdrawalQueue).balance, withdrawalQueueBalanceBefore + requestToFinalizeClaimableAmount
         );

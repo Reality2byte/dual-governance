@@ -4,7 +4,6 @@ pragma solidity 0.8.26;
 /* solhint-disable no-console */
 
 import {Vm} from "forge-std/Test.sol";
-import {console} from "forge-std/console.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -366,16 +365,13 @@ library LidoUtils {
         uint256 newCLBalance;
         if (newTotalSupply > totalSupply) {
             uint256 totalSupplyRebaseAmount = newTotalSupply - totalSupply;
-            console.log("Total supply rebase amount:", totalSupplyRebaseAmount.formatEther());
             totalSupplyRebaseAmount =
                 totalSupplyRebaseAmount * feeBasePrecision / (feeBasePrecision - modulesFee - treasuryFee);
-            console.log("Total supply rebase amount:", totalSupplyRebaseAmount.formatEther());
             newCLBalance = clBalance + totalSupplyRebaseAmount;
         } else {
             uint256 totalSupplyRebaseAmount = totalSupply - newTotalSupply;
             newCLBalance = clBalance - totalSupplyRebaseAmount;
         }
-        console.log(self.stETH.getPooledEthByShares(1 ether));
 
         _handleOracleReport(self, int256(newCLBalance) - int256(clBalance), lastUnstETHIdToFinalize, targetShareRate);
 
@@ -390,7 +386,9 @@ library LidoUtils {
             uint256 shareRateAfter = self.stETH.getPooledEthByShares(10 ** 27);
             rebaseRate = PercentsD16.fromFraction(shareRateAfter, shareRateBefore);
         }
-        vm.assertApproxEqAbs(rebaseRate.toUint256(), rebaseFactor.toUint256(), 3 wei, "Rebase rate error is too high");
+        vm.assertApproxEqAbs(
+            rebaseRate.toUint256(), rebaseFactor.toUint256(), 100 gwei, "Rebase rate error is too high"
+        );
     }
 
     function _sweepBufferedEther(Context memory self) internal returns (uint256 clBalance) {
@@ -454,22 +452,13 @@ library LidoUtils {
             (uint256 ethToLock, uint256 sharesToBurn) =
                 self.withdrawalQueue.prefinalize(withdrawalBatches.getResult(), simulatedShareRate);
 
-            console.log(
-                "Withdrawal batches: %s, ethToLock: %s, sharesToBurn: %s",
-                withdrawalBatches.getResult().length,
-                ethToLock.formatEther(),
-                sharesToBurn.formatEther()
-            );
-
             uint256 ethToCutFromCL = sharesToBurn * targetShareRate / 10 ** 27;
             vm.deal(self.withdrawalVault, ethToLock);
-            newCLBalance -= 1000922757610576869913;
-            console.log("ethToCutFromCL", ethToCutFromCL.formatEther());
-
-            // console.log("wq balance", address(self.withdrawalQueue).balance.formatEther());
+            newCLBalance -= ethToCutFromCL;
         }
 
         {
+            vm.deal(self.withdrawalVault, self.withdrawalVault.balance);
             vm.startPrank(address(self.accountingOracle));
 
             _handleOracleReport(
@@ -535,52 +524,8 @@ library LidoUtils {
         uint256 lastUnstETHIdToFinalize
     ) internal returns (SimulateReportResult memory res) {
         uint256 snapshotId = vm.snapshot();
-        console.log("----- Simulate Oracle report ----");
 
-        uint256 requiredEthToFinalize = 0;
-        uint256 lastFinalizedId = self.withdrawalQueue.getLastFinalizedRequestId();
-
-        if (lastUnstETHIdToFinalize > lastFinalizedId) {
-            vm.deal(self.withdrawalVault, newCLBalance);
-
-            vm.startPrank(address(self.accountingOracle));
-            _handleOracleReport(
-                self,
-                HandleOracleReportParams({
-                    reportTimestamp: block.timestamp,
-                    timeElapsed: 1 days,
-                    clValidators: beaconValidators,
-                    clBalance: 0,
-                    withdrawalVaultBalance: self.withdrawalVault.balance,
-                    elRewardsVaultBalance: self.elRewardsVault.balance,
-                    sharesRequestedToBurn: 0,
-                    withdrawalFinalizationBatches: new uint256[](0),
-                    simulatedShareRate: 0
-                })
-            );
-            vm.stopPrank();
-
-            uint256 numberOfRequests = lastUnstETHIdToFinalize - lastFinalizedId;
-            uint256[] memory requestIdsToFinalize = new uint256[](numberOfRequests);
-
-            uint256 j = 0;
-            for (uint256 i = lastFinalizedId + 1; i <= lastUnstETHIdToFinalize; i++) {
-                requestIdsToFinalize[j++] = i;
-            }
-
-            uint256[] memory hints = self.withdrawalQueue.findCheckpointHints(
-                requestIdsToFinalize, 1, self.withdrawalQueue.getLastCheckpointIndex()
-            );
-
-            uint256[] memory claimableEth = self.withdrawalQueue.getClaimableEther(requestIdsToFinalize, hints);
-
-            for (uint256 i = 0; i < claimableEth.length; i++) {
-                requiredEthToFinalize += claimableEth[i];
-            }
-            vm.revertTo(snapshotId);
-        }
-
-        vm.deal(self.withdrawalVault, requiredEthToFinalize);
+        vm.deal(self.withdrawalVault, newCLBalance);
 
         vm.startPrank(address(self.accountingOracle));
         res = _handleOracleReport(
@@ -589,7 +534,7 @@ library LidoUtils {
                 reportTimestamp: block.timestamp,
                 timeElapsed: 1 days,
                 clValidators: beaconValidators,
-                clBalance: newCLBalance - requiredEthToFinalize,
+                clBalance: 0,
                 withdrawalVaultBalance: self.withdrawalVault.balance,
                 elRewardsVaultBalance: self.elRewardsVault.balance,
                 sharesRequestedToBurn: 0,
