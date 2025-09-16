@@ -212,6 +212,7 @@ library LidoUtils {
         address withdrawalQueue,
         address accountingOracle,
         address oracleReportSanityChecker,
+        address stakingRouter,
         address elRewardsVault,
         address withdrawalVault,
         address daoAcl,
@@ -227,6 +228,7 @@ library LidoUtils {
         ctx.withdrawalQueue = IWithdrawalQueue(withdrawalQueue);
         ctx.accountingOracle = IAccountingOracle(accountingOracle);
         ctx.oracleReportSanityChecker = IOracleReportSanityChecker(oracleReportSanityChecker);
+        ctx.stakingRouter = IStakingRouter(stakingRouter);
 
         ctx.elRewardsVault = elRewardsVault;
         ctx.withdrawalVault = withdrawalVault;
