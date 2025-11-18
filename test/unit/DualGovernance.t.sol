@@ -32,12 +32,13 @@ import {ITiebreaker} from "contracts/interfaces/ITiebreaker.sol";
 import {IEscrowBase} from "contracts/interfaces/IEscrowBase.sol";
 
 import {UnitTest} from "test/utils/unit-test.sol";
-import {StETHMock} from "test/mocks/StETHMock.sol";
-import {WstETHMock} from "test/mocks/WstETHMock.sol";
 import {TimelockMock} from "test/mocks/TimelockMock.sol";
 import {WithdrawalQueueMock} from "test/mocks/WithdrawalQueueMock.sol";
 import {SealableMock} from "test/mocks/SealableMock.sol";
 import {computeAddress} from "test/utils/addresses.sol";
+
+import {StETHMock} from "scripts/lido-mocks/StETHMock.sol";
+import {WstETHMock} from "scripts/lido-mocks/WstETHMock.sol";
 
 contract DualGovernanceUnitTests is UnitTest {
     Executor private _executor = new Executor(address(this));
@@ -75,15 +76,11 @@ contract DualGovernanceUnitTests is UnitTest {
     );
 
     DualGovernance.SignallingTokens internal _signallingTokens = DualGovernance.SignallingTokens({
-        stETH: _STETH_MOCK,
-        wstETH: _WSTETH_MOCK,
-        withdrawalQueue: _WITHDRAWAL_QUEUE_MOCK
+        stETH: _STETH_MOCK, wstETH: _WSTETH_MOCK, withdrawalQueue: _WITHDRAWAL_QUEUE_MOCK
     });
 
     DualGovernance.DualGovernanceComponents internal _dgComponents = DualGovernance.DualGovernanceComponents({
-        timelock: _timelock,
-        resealManager: _RESEAL_MANAGER_STUB,
-        configProvider: _configProvider
+        timelock: _timelock, resealManager: _RESEAL_MANAGER_STUB, configProvider: _configProvider
     });
 
     DualGovernance.SanityCheckParams internal _sanityCheckParams = DualGovernance.SanityCheckParams({
@@ -95,9 +92,7 @@ contract DualGovernanceUnitTests is UnitTest {
     });
 
     DualGovernance internal _dualGovernance = new DualGovernance({
-        components: _dgComponents,
-        signallingTokens: _signallingTokens,
-        sanityCheckParams: _sanityCheckParams
+        components: _dgComponents, signallingTokens: _signallingTokens, sanityCheckParams: _sanityCheckParams
     });
 
     Escrow internal _escrow;
@@ -132,9 +127,7 @@ contract DualGovernanceUnitTests is UnitTest {
         _sanityCheckParams.maxTiebreakerActivationTimeout = Durations.from(1000);
 
         new DualGovernance({
-            components: _dgComponents,
-            signallingTokens: _signallingTokens,
-            sanityCheckParams: _sanityCheckParams
+            components: _dgComponents, signallingTokens: _signallingTokens, sanityCheckParams: _sanityCheckParams
         });
     }
 
@@ -143,9 +136,7 @@ contract DualGovernanceUnitTests is UnitTest {
         _sanityCheckParams.maxTiebreakerActivationTimeout = Durations.from(1000);
 
         new DualGovernance({
-            components: _dgComponents,
-            signallingTokens: _signallingTokens,
-            sanityCheckParams: _sanityCheckParams
+            components: _dgComponents, signallingTokens: _signallingTokens, sanityCheckParams: _sanityCheckParams
         });
     }
 
@@ -162,9 +153,7 @@ contract DualGovernanceUnitTests is UnitTest {
         );
 
         new DualGovernance({
-            components: _dgComponents,
-            signallingTokens: _signallingTokens,
-            sanityCheckParams: _sanityCheckParams
+            components: _dgComponents, signallingTokens: _signallingTokens, sanityCheckParams: _sanityCheckParams
         });
     }
 
@@ -191,14 +180,10 @@ contract DualGovernanceUnitTests is UnitTest {
 
         DualGovernance dualGovernanceLocal = new DualGovernance({
             components: DualGovernance.DualGovernanceComponents({
-                timelock: _timelock,
-                resealManager: _RESEAL_MANAGER_STUB,
-                configProvider: _configProvider
+                timelock: _timelock, resealManager: _RESEAL_MANAGER_STUB, configProvider: _configProvider
             }),
             signallingTokens: DualGovernance.SignallingTokens({
-                stETH: _STETH_MOCK,
-                wstETH: _WSTETH_MOCK,
-                withdrawalQueue: _WITHDRAWAL_QUEUE_MOCK
+                stETH: _STETH_MOCK, wstETH: _WSTETH_MOCK, withdrawalQueue: _WITHDRAWAL_QUEUE_MOCK
             }),
             sanityCheckParams: DualGovernance.SanityCheckParams({
                 minWithdrawalsBatchSize: 4,

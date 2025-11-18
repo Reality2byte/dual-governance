@@ -275,6 +275,12 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
     bool internal LIMIT_FINALIZATION_PHASE;
 
     function setUp() external {
+        // Note: simulation test may take significant time to pass
+        if (!vm.envOr("RUN_SOLVENCY_SIMULATION_TEST", false)) {
+            vm.skip(true, "To enable this test set the env variable RUN_SOLVENCY_SIMULATION_TEST=true");
+            return;
+        }
+
         _loadOrDeployDGSetup();
         _random = Random.create(block.timestamp);
         _nextFrameStart = _lido.getReportTimeElapsed().nextFrameStart;
@@ -302,12 +308,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
 
     function testFork_SolvencySimulation() external {
         {
-            // Note: simulation test may take significant time to pass
-            if (!vm.envOr("RUN_SOLVENCY_SIMULATION_TEST", false)) {
-                vm.skip(true, "To enable this test set the env variable RUN_SOLVENCY_SIMULATION_TEST=true");
-                return;
-            }
-
             if (vm.envOr("LIMIT_FINALIZATION_PHASE", false)) {
                 LIMIT_FINALIZATION_PHASE = true;
                 console.log(">>> Finalization phase is limited to 10_000 iterations");
@@ -490,10 +490,11 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
         uint256 sharesLockedInEscrows
     ) internal view returns (uint256 balanceInETH) {
         balanceInETH = account.balance + _lido.stETH.balanceOf(account)
-            + _lido.stETH.getPooledEthByShares(
-                _lido.wstETH.balanceOf(account) + sharesLockedInEscrows
-                    + _accountsDetails[account].accidentalWstETHTransferAmount
-            ) + ethLockedUnclaimed + _accountsDetails[account].accidentalETHTransferAmount
+            + _lido.stETH
+                .getPooledEthByShares(
+                    _lido.wstETH.balanceOf(account) + sharesLockedInEscrows
+                        + _accountsDetails[account].accidentalWstETHTransferAmount
+                ) + ethLockedUnclaimed + _accountsDetails[account].accidentalETHTransferAmount
             + _accountsDetails[account].accidentalStETHTransferAmount
             + _accountsDetails[account].accidentalUnstETHTransferAmount;
     }
@@ -626,7 +627,8 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
 
         vm.warp(
             block.timestamp + details.rageQuitExtensionPeriodStartedAt.toSeconds()
-                + details.rageQuitExtensionPeriodDuration.toSeconds() + details.rageQuitEthWithdrawalsDelay.toSeconds() + 1
+                + details.rageQuitExtensionPeriodDuration.toSeconds() + details.rageQuitEthWithdrawalsDelay.toSeconds()
+                + 1
         );
 
         for (uint256 j = 0; j < _allAccounts.length; ++j) {
@@ -704,9 +706,8 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
                 if (claimType % 2 == 0) {
                     rageQuitEscrow.claimNextWithdrawalsBatch(unstETHIdsCount);
                 } else {
-                    uint256[] memory hints = _lido.withdrawalQueue.findCheckpointHints(
-                        unstETHIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex()
-                    );
+                    uint256[] memory hints = _lido.withdrawalQueue
+                        .findCheckpointHints(unstETHIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
 
                     uint256[] memory wrClaimableEth = _lido.withdrawalQueue.getClaimableEther(unstETHIds, hints);
                     uint256 escrowEthBalance = address(rageQuitEscrow).balance;
@@ -827,23 +828,20 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
         if (
             block.timestamp
                 <= details.rageQuitExtensionPeriodStartedAt.toSeconds()
-                    + details.rageQuitExtensionPeriodDuration.toSeconds() + details.rageQuitEthWithdrawalsDelay.toSeconds()
+                    + details.rageQuitExtensionPeriodDuration.toSeconds()
+                    + details.rageQuitEthWithdrawalsDelay.toSeconds()
         ) {
             return false;
         }
 
         if (
-            (
-                _rageQuitEscrows[0] == rageQuitEscrow
+            (_rageQuitEscrows[0] == rageQuitEscrow
                     && address(rageQuitEscrow).balance
                         > _lido.stETH.getPooledEthByShares(_initialVetoSignallingEscrowLockedShares)
-                            + _accidentalETHTransfersByEscrow[address(rageQuitEscrow)] + rageQuitBalanceAccuracy
-            )
-                || (
-                    _rageQuitEscrows[0] != rageQuitEscrow
-                        && address(rageQuitEscrow).balance
-                            > _accidentalETHTransfersByEscrow[address(rageQuitEscrow)] + rageQuitBalanceAccuracy
-                )
+                            + _accidentalETHTransfersByEscrow[address(rageQuitEscrow)] + rageQuitBalanceAccuracy)
+                || (_rageQuitEscrows[0] != rageQuitEscrow
+                    && address(rageQuitEscrow).balance
+                        > _accidentalETHTransfersByEscrow[address(rageQuitEscrow)] + rageQuitBalanceAccuracy)
         ) {
             return false;
         }
@@ -887,9 +885,8 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
         uint256[] memory requestIdsToClaim = requestsToClaimArrayBuilder.getSorted();
 
         if (requestIdsToClaim.length > 0) {
-            uint256[] memory hints = _lido.withdrawalQueue.findCheckpointHints(
-                requestIdsToClaim, 1, _lido.withdrawalQueue.getLastCheckpointIndex()
-            );
+            uint256[] memory hints = _lido.withdrawalQueue
+                .findCheckpointHints(requestIdsToClaim, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
             uint256[] memory claimableAmounts =
                 IWithdrawalQueue(_lido.withdrawalQueue).getClaimableEther(requestIdsToClaim, hints);
 
@@ -1223,8 +1220,9 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             _lockStETH(account, lockAmount);
             _totalLockedStETH += lockAmount;
 
-            _accountsDetails[account].sharesLockedInEscrow[_getCurrentEscrowAddress()] +=
-                _lido.stETH.getSharesByPooledEth(lockAmount);
+            _accountsDetails[account].sharesLockedInEscrow[
+                _getCurrentEscrowAddress()
+            ] += _lido.stETH.getSharesByPooledEth(lockAmount);
 
             _debug.debug("Account %s locked %s stETH in signalling escrow", account, lockAmount.formatEther());
             return lockAmount;
@@ -1336,12 +1334,12 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
 
                 totalLockedCount += requestsArrayBuilder.size;
 
-                totalLockedAmount += _lido.stETH.getPooledEthByShares(
-                    (
-                        escrowDetailsAfter.totalUnstETHUnfinalizedShares
-                            - escrowDetailsBefore.totalUnstETHUnfinalizedShares
-                    ).toUint256()
-                );
+                totalLockedAmount += _lido.stETH
+                    .getPooledEthByShares(
+                        (escrowDetailsAfter.totalUnstETHUnfinalizedShares
+                                - escrowDetailsBefore.totalUnstETHUnfinalizedShares)
+                        .toUint256()
+                    );
 
                 for (uint256 j = 0; j < requestsArrayBuilder.size; ++j) {
                     _accountsDetails[account].unstETHIdsLockedInEscrow[_getCurrentEscrowAddress()].push(
@@ -1408,9 +1406,8 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             uint256[] memory requestIdsToClaim = requestsArrayBuilder.getSorted();
 
             if (requestIdsToClaim.length > 0) {
-                uint256[] memory hints = _lido.withdrawalQueue.findCheckpointHints(
-                    requestIdsToClaim, 1, _lido.withdrawalQueue.getLastCheckpointIndex()
-                );
+                uint256[] memory hints = _lido.withdrawalQueue
+                    .findCheckpointHints(requestIdsToClaim, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
 
                 bytes memory accountCode = account.code;
                 if (accountCode.length > 0) {
@@ -1461,9 +1458,8 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
         }
 
         uint256[] memory requestIdsToFinalize = requestsArrayBuilder.getSorted();
-        uint256[] memory hints = _lido.withdrawalQueue.findCheckpointHints(
-            requestIdsToFinalize, 1, _lido.withdrawalQueue.getLastCheckpointIndex()
-        );
+        uint256[] memory hints = _lido.withdrawalQueue
+            .findCheckpointHints(requestIdsToFinalize, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
 
         _totalMarkedUnstETHFinalizedCount += requestIdsToFinalize.length;
 

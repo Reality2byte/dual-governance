@@ -238,9 +238,7 @@ contract GovernedTimelockSetup is ForkTestSetup, TestingAssertEqExtender {
     function _getMaliciousCalls() internal view returns (ExternalCall[] memory calls) {
         calls = new ExternalCall[](1);
         calls[0] = ExternalCall({
-            target: address(_targetMock),
-            value: 0,
-            payload: abi.encodeCall(IPotentiallyDangerousContract.doRugPool, ())
+            target: address(_targetMock), value: 0, payload: abi.encodeCall(IPotentiallyDangerousContract.doRugPool, ())
         });
     }
 
@@ -470,8 +468,9 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
             }
         }
 
-        address[] memory sealableWithdrawalBlockers = new address[](1);
+        address[] memory sealableWithdrawalBlockers = new address[](2);
         sealableWithdrawalBlockers[0] = address(_lido.withdrawalQueue);
+        sealableWithdrawalBlockers[1] = address(_lido.vebo);
 
         config = DGSetupDeployConfig.Context({
             chainId: 1,
@@ -495,9 +494,7 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
             }),
             dualGovernance: DualGovernanceContractDeployConfig.Context({
                 signallingTokens: DualGovernance.SignallingTokens({
-                    stETH: _lido.stETH,
-                    wstETH: _lido.wstETH,
-                    withdrawalQueue: _lido.withdrawalQueue
+                    stETH: _lido.stETH, wstETH: _lido.wstETH, withdrawalQueue: _lido.withdrawalQueue
                 }),
                 sanityCheckParams: DualGovernance.SanityCheckParams({
                     minWithdrawalsBatchSize: 4,
@@ -1179,10 +1176,7 @@ contract TGScenarioTestSetup is GovernedTimelockSetup {
         proposalId = _submitProposal(address(_tgDeployedContracts.timelockedGovernance.GOVERNANCE()), calls, metadata);
     }
 
-    function _adoptProposal(
-        ExternalCall[] memory calls,
-        string memory metadata
-    ) internal returns (uint256 proposalId) {
+    function _adoptProposal(ExternalCall[] memory calls, string memory metadata) internal returns (uint256 proposalId) {
         proposalId = _adoptProposal(address(_tgDeployedContracts.timelockedGovernance.GOVERNANCE()), calls, metadata);
     }
 }
