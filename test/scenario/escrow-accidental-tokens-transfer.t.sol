@@ -80,9 +80,10 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
         uint256[] memory vetoer2UnstETHIds;
 
         PercentD16 expectedRageQuitSupport = PercentsD16.fromFraction({
-            numerator: _lido.stETH.getPooledEthByShares(
-                vetoer1LockedStEthShares + vetoer1LockedWStEthAmount + vetoer1LockedUnStEthShares
-            ),
+            numerator: _lido.stETH
+                .getPooledEthByShares(
+                    vetoer1LockedStEthShares + vetoer1LockedWStEthAmount + vetoer1LockedUnStEthShares
+                ),
             denominator: _lido.stETH.totalSupply()
         });
 
@@ -160,9 +161,10 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
             _simulateRebase(rebasePercent);
 
             PercentD16 newExpectedRageQuitSupport = PercentsD16.fromFraction({
-                numerator: _lido.stETH.getPooledEthByShares(
-                    vetoer1LockedStEthShares + vetoer1LockedWStEthAmount + vetoer1LockedUnStEthShares
-                ),
+                numerator: _lido.stETH
+                    .getPooledEthByShares(
+                        vetoer1LockedStEthShares + vetoer1LockedWStEthAmount + vetoer1LockedUnStEthShares
+                    ),
                 denominator: _lido.stETH.totalSupply()
             });
 
@@ -273,8 +275,7 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
         uint256[] memory vetoer2UnstETHIds;
 
         PercentD16 expectedRageQuitSupport = PercentsD16.fromFraction({
-            numerator: lockedStEthShares + lockedWStEth + lockedUnStEthShares,
-            denominator: _lido.stETH.getTotalShares()
+            numerator: lockedStEthShares + lockedWStEth + lockedUnStEthShares, denominator: _lido.stETH.getTotalShares()
         });
 
         _step("1. New proposal submission.");
@@ -411,11 +412,9 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
 
             _requestWithdrawals(escrow);
 
-            console.log(_lido.withdrawalQueue.getLastFinalizedRequestId(), address(_lido.withdrawalQueue).balance);
             while (_lido.withdrawalQueue.getLastRequestId() != _lido.withdrawalQueue.getLastFinalizedRequestId()) {
                 _finalizeWithdrawalQueue();
             }
-            console.log(_lido.withdrawalQueue.getLastFinalizedRequestId(), address(_lido.withdrawalQueue).balance);
 
             assertEq(_lido.withdrawalQueue.getLastRequestId(), _lido.withdrawalQueue.getLastFinalizedRequestId());
             // Claim all the withdrawals in batches.
@@ -428,9 +427,6 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
             uint256 totalETHAfter = address(escrow).balance;
             uint256 totalLockedStETHAfter = _lido.stETH.balanceOf(address(escrow));
             totalWithdrawnETH = totalETHAfter - totalETHBefore;
-            console.log("totalWithdrawnETH", totalWithdrawnETH);
-            console.log("totalLockedStETHBefore", totalLockedStETHBefore);
-            console.log("totalLockedStETHAfter", totalLockedStETHAfter);
             // During the RageQuit finalization of the batches each withdrawal NFT may loose 1-2 wei during
             // claiming due to share rate rounding error.
             assertApproxEqAbs(
@@ -517,7 +513,6 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
         uint256 iteration = 0;
         uint256 maxIterations = 100;
         while (!escrowInstance.isWithdrawalsBatchesClosed()) {
-            console.log("iteration", iteration);
             if (iteration > maxIterations) {
                 console.log("maxIterations exceeded while requesting withdrawals", iteration);
                 break;

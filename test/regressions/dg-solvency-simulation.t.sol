@@ -572,16 +572,8 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
 
                 uint256 maxBalanceEstimation = holderBalanceBefore * _positiveRebaseAccumulated / HUNDRED_PERCENT_D16;
 
-                if (holderBalanceAfter < minBalanceEstimation || holderBalanceAfter > maxBalanceEstimation) {
-                    console.log(account);
-                    console.log("Holder balance before", holderBalanceBefore.formatEther());
-                    console.log("Holder balance after", holderBalanceAfter.formatEther());
-                    console.log("Min balance estimation", minBalanceEstimation.formatEther());
-                    console.log("Max balance estimation", maxBalanceEstimation.formatEther());
-                }
-
-                // assertTrue(holderBalanceAfter >= minBalanceEstimation);
-                // assertTrue(holderBalanceAfter <= maxBalanceEstimation);
+                assertTrue(holderBalanceAfter >= minBalanceEstimation);
+                assertTrue(holderBalanceAfter <= maxBalanceEstimation);
             }
         }
     }

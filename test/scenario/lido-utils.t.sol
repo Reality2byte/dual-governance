@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-/* solhint-disable no-console */
-
 import {DGScenarioTestSetup, MAINNET_CHAIN_ID} from "test/utils/integration-tests.sol";
 import {LidoUtils} from "test/utils/lido-utils.sol";
 import {PercentsD16, PercentD16, HUNDRED_PERCENT_BP, HUNDRED_PERCENT_D16} from "contracts/types/PercentD16.sol";
 import {DecimalsFormatting} from "test/utils/formatting.sol";
-
-import {console} from "forge-std/console.sol";
 
 contract LidoUtilsTest is DGScenarioTestSetup {
     using LidoUtils for LidoUtils.Context;
@@ -20,6 +16,11 @@ contract LidoUtilsTest is DGScenarioTestSetup {
     function setUp() public {
         _setupFork(MAINNET_CHAIN_ID, _getEnvForkBlockNumberOrDefault(MAINNET_CHAIN_ID));
         vm.deal(stranger, 100 ether);
+
+        vm.startPrank(stranger);
+        _lido.stETH.submit{value: 10 ether}(address(0));
+        _lido.stETH.approve(address(_lido.withdrawalQueue), type(uint256).max);
+        vm.stopPrank();
     }
 
     function testFork_rebaseHundredPercentNoFinalization() public {
@@ -35,8 +36,12 @@ contract LidoUtilsTest is DGScenarioTestSetup {
     }
 
     function testForkFuzz_rebaseAllowedPercentsNoFinalization(uint256 percentNotNormalized) public {
-        vm.assume(percentNotNormalized < PercentsD16.from(10 ** 13).toUint256());
-        PercentD16 rebasePercent = PercentsD16.from(HUNDRED_PERCENT_D16 + percentNotNormalized);
+        uint256 percentLimit = PercentsD16.from(2 * 10 ** 13).toUint256();
+
+        vm.assume(percentNotNormalized < percentLimit);
+        uint256 percentNotNormalized = PercentsD16.from(10 ** 14).toUint256();
+
+        PercentD16 rebasePercent = PercentsD16.from(HUNDRED_PERCENT_D16 + percentNotNormalized - percentLimit);
 
         uint256 shareRateBefore = _lido.stETH.getPooledEthByShares(1 ether);
         uint256 withdrawalQueueBalanceBefore = address(_lido.withdrawalQueue).balance;
@@ -46,7 +51,7 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         uint256 expectedShareRate = shareRateBefore * rebasePercent.toUint256() / HUNDRED_PERCENT_D16;
 
-        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 10_000 wei);
+        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 1);
         assertEq(address(_lido.withdrawalQueue).balance, withdrawalQueueBalanceBefore);
         assertEq(_lido.withdrawalQueue.getLastFinalizedRequestId(), lastFinalizedRequestIdBefore);
     }
@@ -89,8 +94,6 @@ contract LidoUtilsTest is DGScenarioTestSetup {
         // vm.assume(percentNotNormalized < PercentsD16.fromBasisPoints(2).toUint256());
         PercentD16 rebasePercent = PercentsD16.from(HUNDRED_PERCENT_D16) + PercentsD16.from(percentNotNormalized);
 
-        console.log("Rebase percent:", rebasePercent.format());
-
         uint256 totalSupplyBefore = _lido.stETH.totalSupply();
         uint256 totalSharesBefore = _lido.stETH.getTotalShares();
 
@@ -108,18 +111,7 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         _lido.performRebase(rebasePercent, lastFinalizedRequestIdBefore + 1);
 
-        console.log(
-            "Total supply before: %s, total shares before: %s",
-            totalSupplyBefore.formatEther(),
-            totalSharesBefore.formatEther()
-        );
-        console.log(
-            "Total supply after: %s, total shares after: %s",
-            _lido.stETH.totalSupply().formatEther(),
-            _lido.stETH.getTotalShares().formatEther()
-        );
-        console.log((int256(_lido.stETH.totalSupply()) - int256(totalSupplyBefore)));
-        console.log(int256(_lido.stETH.getTotalShares()) - int256(totalSharesBefore));
+        uint256 expectedShareRate = shareRateBefore * rebasePercent.toUint256() / HUNDRED_PERCENT_D16;
 
         uint256[] memory requestIds = new uint256[](1);
         requestIds[0] = lastFinalizedRequestIdBefore + 1;
@@ -129,9 +121,7 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         uint256 requestToFinalizeClaimableAmount = _lido.withdrawalQueue.getClaimableEther(requestIds, hints)[0];
 
-        uint256 expectedShareRate = shareRateBefore * rebasePercent.toUint256() / HUNDRED_PERCENT_D16;
-
-        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 100 gwei);
+        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 1 gwei);
         assertEq(
             address(_lido.withdrawalQueue).balance, withdrawalQueueBalanceBefore + requestToFinalizeClaimableAmount
         );
@@ -142,8 +132,6 @@ contract LidoUtilsTest is DGScenarioTestSetup {
         vm.assume(percentNotNormalized < PercentsD16.fromBasisPoints(4).toUint256());
         PercentD16 rebasePercent = PercentsD16.from(percentNotNormalized) + PercentsD16.fromBasisPoints(99_98);
 
-        console.log("Rebase percent:", rebasePercent.format());
-
         uint256 totalSupplyBefore = _lido.stETH.totalSupply();
         uint256 totalSharesBefore = _lido.stETH.getTotalShares();
 
@@ -160,19 +148,6 @@ contract LidoUtilsTest is DGScenarioTestSetup {
         }
 
         _lido.performRebase(rebasePercent, lastFinalizedRequestIdBefore + 1);
-
-        console.log(
-            "Total supply before: %s, total shares before: %s",
-            totalSupplyBefore.formatEther(),
-            totalSharesBefore.formatEther()
-        );
-        console.log(
-            "Total supply after: %s, total shares after: %s",
-            _lido.stETH.totalSupply().formatEther(),
-            _lido.stETH.getTotalShares().formatEther()
-        );
-        console.log((int256(_lido.stETH.totalSupply()) - int256(totalSupplyBefore)));
-        console.log(int256(_lido.stETH.getTotalShares()) - int256(totalSharesBefore));
 
         uint256[] memory requestIds = new uint256[](1);
         requestIds[0] = lastFinalizedRequestIdBefore + 1;

@@ -26,7 +26,7 @@ uint256 constant WITHDRAWALS_BATCH_SIZE = 128;
 uint256 constant MIN_LOCKABLE_AMOUNT = 1000 wei;
 
 uint256 constant MIN_REBASE_BP = 99_90;
-uint256 constant MAX_REBASE_BP = 100_25;
+uint256 constant MAX_REBASE_BP = 100_01;
 
 struct VetoersFile {
     address[] addresses;

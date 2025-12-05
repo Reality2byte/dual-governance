@@ -18,6 +18,8 @@ import {IWithdrawalQueue} from "./interfaces/IWithdrawalQueue.sol";
 import {IAccountingOracle} from "./interfaces/IAccountingOracle.sol";
 import {IOracleReportSanityChecker} from "./interfaces/IOracleReportSanityChecker.sol";
 import {IStakingRouter} from "./interfaces/IStakingRouter.sol";
+import {ILidoLocator} from "./interfaces/ILidoLocator.sol";
+import {IAccounting} from "./interfaces/IAccounting.sol";
 
 import {IAragonACL} from "./interfaces/IAragonACL.sol";
 import {IAragonAgent} from "./interfaces/IAragonAgent.sol";
@@ -33,15 +35,14 @@ import {Uint256ArrayBuilder} from "test/utils/uint256-array-builder.sol";
 // Mainnet Addresses
 // ---
 
+address constant MAINNET_LIDO_LOCATOR = 0xC1d0b3DE6792Bf6b4b37EccdcC24e45978Cfd2Eb;
 address constant MAINNET_ST_ETH = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;
 address constant MAINNET_WST_ETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
 address constant MAINNET_WITHDRAWAL_QUEUE = 0x889edC2eDab5f40e902b864aD4d7AdE8E412F9B1;
 address constant MAINNET_HASH_CONSENSUS = 0xD624B08C83bAECF0807Dd2c6880C3154a5F0B288;
 address constant MAINNET_BURNER = 0xD15a672319Cf0352560eE76d9e89eAB0889046D3;
-address constant MAINNET_ACCOUNTING_ORACLE = 0x852deD011285fe67063a08005c71a85690503Cee;
 address constant MAINNET_EL_REWARDS_VAULT = 0x388C818CA8B9251b393131C08a736A67ccB19297;
 address constant MAINNET_WITHDRAWAL_VAULT = 0xB9D7934878B5FB9610B3fE8A5e441e8fad7E293f;
-address constant MAINNET_ORACLE_REPORT_SANITY_CHECKER = 0x6232397ebac4f5772e53285B26c47914E9461E75;
 address constant MAINNET_STAKING_ROUTER = 0xFdDf38947aFB03C621C71b06C9C70bce73f12999;
 address constant MAINNET_VEBO = 0x0De4Ea0184c2ad0BacA7183356Aea5B8d5Bf5c6e;
 
@@ -55,15 +56,14 @@ address constant MAINNET_DAO_TOKEN_MANAGER = 0xf73a1260d222f447210581DDf212D915c
 // Holesky Addresses
 // ---
 
+address constant HOLESKY_LIDO_LOCATOR = 0x28FAB2059C713A7F9D8c86Db49f9bb0e96Af1ef8;
 address constant HOLESKY_ST_ETH = 0x3F1c547b21f65e10480dE3ad8E19fAAC46C95034;
 address constant HOLESKY_WST_ETH = 0x8d09a4502Cc8Cf1547aD300E066060D043f6982D;
 address constant HOLESKY_WITHDRAWAL_QUEUE = 0xc7cc160b58F8Bb0baC94b80847E2CF2800565C50;
 address constant HOLESKY_HASH_CONSENSUS = 0xa067FC95c22D51c3bC35fd4BE37414Ee8cc890d2;
 address constant HOLESKY_BURNER = 0x4E46BD7147ccf666E1d73A3A456fC7a68de82eCA;
-address constant HOLESKY_ACCOUNTING_ORACLE = 0x4E97A3972ce8511D87F334dA17a2C332542a5246;
 address constant HOLESKY_EL_REWARDS_VAULT = 0xE73a3602b99f1f913e72F8bdcBC235e206794Ac8;
 address constant HOLESKY_WITHDRAWAL_VAULT = 0xF0179dEC45a37423EAD4FaD5fCb136197872EAd9;
-address constant HOLESKY_ORACLE_REPORT_SANITY_CHECKER = 0x80D1B1fF6E84134404abA18A628347960c38ccA7;
 address constant HOLESKY_STAKING_ROUTER = 0xd6EbF043D30A7fe46D1Db32BA90a0A51207FE229;
 address constant HOLESKY_VEBO = 0xffDDF7025410412deaa05E3E1cE68FE53208afcb;
 
@@ -77,15 +77,14 @@ address constant HOLESKY_DAO_TOKEN_MANAGER = 0xFaa1692c6eea8eeF534e7819749aD93a1
 // Hoodi Addresses
 // ---
 
+address constant HOODI_LIDO_LOCATOR = 0xe2EF9536DAAAEBFf5b1c130957AB3E80056b06D8;
 address constant HOODI_ST_ETH = 0x3508A952176b3c15387C97BE809eaffB1982176a;
 address constant HOODI_WST_ETH = 0x7E99eE3C66636DE415D2d7C880938F2f40f94De4;
 address constant HOODI_WITHDRAWAL_QUEUE = 0xfe56573178f1bcdf53F01A6E9977670dcBBD9186;
 address constant HOODI_HASH_CONSENSUS = 0x32EC59a78abaca3f91527aeB2008925D5AaC1eFC;
 address constant HOODI_BURNER = 0x4e9A9ea2F154bA34BE919CD16a4A953DCd888165;
-address constant HOODI_ACCOUNTING_ORACLE = 0xcb883B1bD0a41512b42D2dB267F2A2cd919FB216;
 address constant HOODI_EL_REWARDS_VAULT = 0x9b108015fe433F173696Af3Aa0CF7CDb3E104258;
 address constant HOODI_WITHDRAWAL_VAULT = 0x4473dCDDbf77679A643BdB654dbd86D67F8d32f2;
-address constant HOODI_ORACLE_REPORT_SANITY_CHECKER = 0x26AED10459e1096d242ABf251Ff55f8DEaf52348;
 address constant HOODI_STAKING_ROUTER = 0xCc820558B39ee15C7C45B59390B503b83fb499A8;
 address constant HOODI_VEBO = 0x8664d394C2B3278F26A1B44B967aEf99707eeAB2;
 
@@ -95,7 +94,11 @@ address constant HOODI_DAO_AGENT = 0x0534aA41907c9631fae990960bCC72d75fA7cfeD;
 address constant HOODI_DAO_VOTING = 0x49B3512c44891bef83F8967d075121Bd1b07a01B;
 address constant HOODI_DAO_TOKEN_MANAGER = 0x8ab4a56721Ad8e68c6Ad86F9D9929782A78E39E5;
 
-Vm constant VM = Vm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+// Lido V3 storage slots
+
+bytes32 constant CL_BALANCE_AND_CL_VALIDATORS_SLOT = keccak256("lido.Lido.clBalanceAndClValidators");
+bytes32 constant BUFFERED_ETHER_AND_DEPOSITED_VALIDATORS_SLOT =
+    keccak256("lido.Lido.bufferedEtherAndDepositedValidators");
 
 library LidoUtils {
     using DecimalsFormatting for uint256;
@@ -104,6 +107,7 @@ library LidoUtils {
 
     struct Context {
         // core
+        ILidoLocator lidoLocator;
         IStETH stETH;
         IWstETH wstETH;
         IBurner burner;
@@ -127,14 +131,15 @@ library LidoUtils {
 
     address internal constant DEFAULT_LDO_WHALE = address(0x1D01D01D01D01d01D01D01D01D01d01d01d01D01);
 
-    function mainnet() internal pure returns (Context memory ctx) {
+    function mainnet() internal view returns (Context memory ctx) {
+        ctx.lidoLocator = ILidoLocator(MAINNET_LIDO_LOCATOR);
         ctx.stETH = IStETH(MAINNET_ST_ETH);
         ctx.wstETH = IWstETH(MAINNET_WST_ETH);
         ctx.burner = IBurner(MAINNET_BURNER);
         ctx.withdrawalQueue = IWithdrawalQueue(MAINNET_WITHDRAWAL_QUEUE);
         ctx.hashConsensus = IHashConsensus(MAINNET_HASH_CONSENSUS);
-        ctx.accountingOracle = IAccountingOracle(MAINNET_ACCOUNTING_ORACLE);
-        ctx.oracleReportSanityChecker = IOracleReportSanityChecker(MAINNET_ORACLE_REPORT_SANITY_CHECKER);
+        ctx.accountingOracle = ctx.lidoLocator.accountingOracle();
+        ctx.oracleReportSanityChecker = ctx.lidoLocator.oracleReportSanityChecker();
         ctx.stakingRouter = IStakingRouter(MAINNET_STAKING_ROUTER);
         ctx.vebo = MAINNET_VEBO;
 
@@ -148,14 +153,15 @@ library LidoUtils {
         ctx.tokenManager = IAragonForwarder(MAINNET_DAO_TOKEN_MANAGER);
     }
 
-    function holesky() internal pure returns (Context memory ctx) {
+    function holesky() internal view returns (Context memory ctx) {
+        ctx.lidoLocator = ILidoLocator(HOLESKY_LIDO_LOCATOR);
         ctx.stETH = IStETH(HOLESKY_ST_ETH);
         ctx.wstETH = IWstETH(HOLESKY_WST_ETH);
         ctx.burner = IBurner(HOLESKY_BURNER);
         ctx.hashConsensus = IHashConsensus(HOLESKY_HASH_CONSENSUS);
         ctx.withdrawalQueue = IWithdrawalQueue(HOLESKY_WITHDRAWAL_QUEUE);
-        ctx.accountingOracle = IAccountingOracle(HOLESKY_ACCOUNTING_ORACLE);
-        ctx.oracleReportSanityChecker = IOracleReportSanityChecker(HOLESKY_ORACLE_REPORT_SANITY_CHECKER);
+        ctx.accountingOracle = ctx.lidoLocator.accountingOracle();
+        ctx.oracleReportSanityChecker = ctx.lidoLocator.oracleReportSanityChecker();
         ctx.stakingRouter = IStakingRouter(HOLESKY_STAKING_ROUTER);
         ctx.vebo = HOLESKY_VEBO;
 
@@ -169,14 +175,15 @@ library LidoUtils {
         ctx.tokenManager = IAragonForwarder(HOLESKY_DAO_TOKEN_MANAGER);
     }
 
-    function hoodi() internal pure returns (Context memory ctx) {
+    function hoodi() internal view returns (Context memory ctx) {
+        ctx.lidoLocator = ILidoLocator(HOODI_LIDO_LOCATOR);
         ctx.stETH = IStETH(HOODI_ST_ETH);
         ctx.wstETH = IWstETH(HOODI_WST_ETH);
         ctx.burner = IBurner(HOODI_BURNER);
         ctx.hashConsensus = IHashConsensus(HOODI_HASH_CONSENSUS);
         ctx.withdrawalQueue = IWithdrawalQueue(HOODI_WITHDRAWAL_QUEUE);
-        ctx.accountingOracle = IAccountingOracle(HOODI_ACCOUNTING_ORACLE);
-        ctx.oracleReportSanityChecker = IOracleReportSanityChecker(HOODI_ORACLE_REPORT_SANITY_CHECKER);
+        ctx.accountingOracle = ctx.lidoLocator.accountingOracle();
+        ctx.oracleReportSanityChecker = ctx.lidoLocator.oracleReportSanityChecker();
         ctx.stakingRouter = IStakingRouter(HOODI_STAKING_ROUTER);
         ctx.vebo = HOODI_VEBO;
 
@@ -336,7 +343,6 @@ library LidoUtils {
     }
 
     function performRebase(Context memory self, PercentD16 rebaseFactor, uint256 lastUnstETHIdToFinalize) internal {
-        // console.log("----- Perform Oracle rebase ----");
         uint256 shareRateBefore = self.stETH.getPooledEthByShares(10 ** 27);
         uint256 targetShareRate = shareRateBefore * PercentD16.unwrap(rebaseFactor) / HUNDRED_PERCENT_D16;
 
@@ -359,18 +365,17 @@ library LidoUtils {
         (uint256 modulesFee, uint256 treasuryFee, uint256 feeBasePrecision) =
             self.stakingRouter.getStakingFeeAggregateDistribution();
 
-        uint256 totalSupply = self.stETH.totalSupply();
-        uint256 newTotalSupply = self.stETH.totalSupply() * PercentD16.unwrap(rebaseFactor) / HUNDRED_PERCENT_D16;
+        uint256 internalTotalEther = self.stETH.getTotalPooledEther() - self.stETH.getExternalEther();
+        uint256 newInternalTotalEther = internalTotalEther * PercentD16.unwrap(rebaseFactor) / HUNDRED_PERCENT_D16;
 
         uint256 newCLBalance;
-        if (newTotalSupply > totalSupply) {
-            uint256 totalSupplyRebaseAmount = newTotalSupply - totalSupply;
-            totalSupplyRebaseAmount =
-                totalSupplyRebaseAmount * feeBasePrecision / (feeBasePrecision - modulesFee - treasuryFee);
-            newCLBalance = clBalance + totalSupplyRebaseAmount;
+        if (newInternalTotalEther > internalTotalEther) {
+            uint256 rebaseAmount = newInternalTotalEther - internalTotalEther;
+            rebaseAmount = rebaseAmount * feeBasePrecision / (feeBasePrecision - modulesFee - treasuryFee);
+            newCLBalance = clBalance + rebaseAmount;
         } else {
-            uint256 totalSupplyRebaseAmount = totalSupply - newTotalSupply;
-            newCLBalance = clBalance - totalSupplyRebaseAmount;
+            uint256 rebaseAmount = internalTotalEther - newInternalTotalEther;
+            newCLBalance = clBalance - rebaseAmount;
         }
 
         _handleOracleReport(self, int256(newCLBalance) - int256(clBalance), lastUnstETHIdToFinalize, targetShareRate);
@@ -386,26 +391,21 @@ library LidoUtils {
             uint256 shareRateAfter = self.stETH.getPooledEthByShares(10 ** 27);
             rebaseRate = PercentsD16.fromFraction(shareRateAfter, shareRateBefore);
         }
-        vm.assertApproxEqAbs(
-            rebaseRate.toUint256(), rebaseFactor.toUint256(), 100 gwei, "Rebase rate error is too high"
-        );
+        vm.assertApproxEqAbs(rebaseRate.toUint256(), rebaseFactor.toUint256(), 1, "Rebase rate error is too high");
     }
 
     function _sweepBufferedEther(Context memory self) internal returns (uint256 clBalance) {
-        bytes32 bufferedEtherSlot = keccak256("lido.Lido.bufferedEther");
-        bytes32 clBalanceSlot = keccak256("lido.Lido.beaconBalance");
+        clBalance = getLowUint128(address(self.stETH), CL_BALANCE_AND_CL_VALIDATORS_SLOT);
+        uint256 bufferedEther = getLowUint128(address(self.stETH), BUFFERED_ETHER_AND_DEPOSITED_VALIDATORS_SLOT);
 
-        clBalance = uint256(vm.load(address(self.stETH), clBalanceSlot));
-        uint256 bufferedEther = uint256(vm.load(address(self.stETH), bufferedEtherSlot));
+        require(bufferedEther == address(self.stETH).balance, "Buffered Ether mismatch");
 
-        // for the simplicity of the accounting, move all buffered ether to the cl balance
-        // as it was deposited
         if (bufferedEther > 0) {
-            vm.deal(address(self.stETH), address(self.stETH).balance - bufferedEther);
+            vm.deal(address(self.stETH), 0);
             clBalance += bufferedEther;
 
-            vm.store(address(self.stETH), bufferedEtherSlot, bytes32(0));
-            vm.store(address(self.stETH), clBalanceSlot, bytes32(clBalance));
+            setLowUint128(address(self.stETH), CL_BALANCE_AND_CL_VALIDATORS_SLOT, clBalance);
+            setLowUint128(address(self.stETH), BUFFERED_ETHER_AND_DEPOSITED_VALIDATORS_SLOT, 0);
 
             (,, uint256 updatedCLBalance) = self.stETH.getBeaconStat();
             require(updatedCLBalance == clBalance, "Unexpected CL Balance");
@@ -424,22 +424,17 @@ library LidoUtils {
 
         uint256 newCLBalance = uint256(int256(oldCLBalance) + clBalanceChange);
 
-        SimulateReportResult memory simulatedReport =
-            _simulateReport(self, beaconValidators, newCLBalance, lastUnstETHIdToFinalize);
-        uint256 simulatedShareRate = simulatedReport.postTotalPooledEther * 10 ** 27 / simulatedReport.postTotalShares;
-
         if (lastUnstETHIdToFinalize > self.withdrawalQueue.getLastFinalizedRequestId()) {
             IWithdrawalQueue.BatchesCalculationState memory batchesState = getFinalizationBatches(
                 self,
                 FinalizationBatchesParams({
                     shareRate: targetShareRate,
-                    limitedWithdrawalVaultBalance: simulatedReport.withdrawals,
+                    limitedWithdrawalVaultBalance: newCLBalance,
                     limitedElRewardsVaultBalance: 0
                 })
             );
 
             withdrawalBatches = Uint256ArrayBuilder.create(batchesState.batchesLength);
-
             for (uint256 i = 0; i < batchesState.batchesLength; ++i) {
                 if (batchesState.batches[i] < lastUnstETHIdToFinalize) {
                     withdrawalBatches.addItem(batchesState.batches[i]);
@@ -449,110 +444,60 @@ library LidoUtils {
                 }
             }
 
-            (uint256 ethToLock, uint256 sharesToBurn) =
-                self.withdrawalQueue.prefinalize(withdrawalBatches.getResult(), simulatedShareRate);
+            vm.deal(self.withdrawalVault, newCLBalance);
 
-            uint256 ethToCutFromCL = sharesToBurn * targetShareRate / 10 ** 27;
-            vm.deal(self.withdrawalVault, ethToLock);
+            uint256 ethToCutFromCL;
+            {
+                IAccounting.CalculatedValues memory simulatedUpdate = self.lidoLocator.accounting()
+                    .simulateOracleReport(
+                        IAccounting.ReportValues({
+                            timestamp: block.timestamp,
+                            timeElapsed: 1 days,
+                            clValidators: beaconValidators,
+                            clBalance: 0,
+                            withdrawalVaultBalance: self.withdrawalVault.balance,
+                            elRewardsVaultBalance: self.elRewardsVault.balance,
+                            sharesRequestedToBurn: 0,
+                            withdrawalFinalizationBatches: withdrawalBatches.getResult(),
+                            simulatedShareRate: targetShareRate
+                        })
+                    );
+
+                ethToCutFromCL = (simulatedUpdate.sharesToBurnForWithdrawals * targetShareRate / 10 ** 27);
+
+                if (targetShareRate > self.stETH.getPooledEthByShares(10 ** 27)) {
+                    (uint256 modulesFee, uint256 treasuryFee, uint256 feeBasePrecision) =
+                        self.stakingRouter.getStakingFeeAggregateDistribution();
+                    ethToCutFromCL += (ethToCutFromCL - simulatedUpdate.etherToFinalizeWQ) * (modulesFee + treasuryFee)
+                        / (feeBasePrecision - modulesFee - treasuryFee);
+                }
+
+                vm.deal(self.withdrawalVault, simulatedUpdate.etherToFinalizeWQ);
+            }
+
             newCLBalance -= ethToCutFromCL;
         }
 
-        {
-            vm.deal(self.withdrawalVault, self.withdrawalVault.balance);
-            vm.startPrank(address(self.accountingOracle));
-
-            _handleOracleReport(
-                self,
-                HandleOracleReportParams({
-                    reportTimestamp: block.timestamp,
-                    timeElapsed: 1 days,
-                    clValidators: beaconValidators,
-                    clBalance: newCLBalance,
-                    withdrawalVaultBalance: self.withdrawalVault.balance,
-                    elRewardsVaultBalance: self.elRewardsVault.balance,
-                    sharesRequestedToBurn: 0,
-                    withdrawalFinalizationBatches: withdrawalBatches.getResult(),
-                    simulatedShareRate: simulatedShareRate
-                })
-            );
-            vm.stopPrank();
-        }
-    }
-
-    struct HandleOracleReportParams {
-        // Oracle timings
-        uint256 reportTimestamp;
-        uint256 timeElapsed;
-        // CL values
-        uint256 clValidators;
-        uint256 clBalance;
-        // EL values
-        uint256 withdrawalVaultBalance;
-        uint256 elRewardsVaultBalance;
-        uint256 sharesRequestedToBurn;
-        // Decision about withdrawals processing
-        uint256[] withdrawalFinalizationBatches;
-        uint256 simulatedShareRate;
-    }
-
-    function _handleOracleReport(
-        Context memory self,
-        HandleOracleReportParams memory params
-    ) private returns (SimulateReportResult memory res) {
-        uint256[4] memory simulatedPostRebaseAmounts =
-            self.stETH
-                .handleOracleReport({
-                    _reportTimestamp: params.reportTimestamp,
-                    _timeElapsed: params.timeElapsed,
-                    _clValidators: params.clValidators,
-                    _clBalance: params.clBalance,
-                    _withdrawalVaultBalance: params.withdrawalVaultBalance,
-                    _elRewardsVaultBalance: params.elRewardsVaultBalance,
-                    _sharesRequestedToBurn: params.sharesRequestedToBurn,
-                    _withdrawalFinalizationBatches: params.withdrawalFinalizationBatches,
-                    _simulatedShareRate: params.simulatedShareRate
-                });
-
-        res.postTotalPooledEther = simulatedPostRebaseAmounts[0];
-        res.postTotalShares = simulatedPostRebaseAmounts[1];
-        res.withdrawals = simulatedPostRebaseAmounts[2];
-        res.elRewards = simulatedPostRebaseAmounts[3];
-    }
-
-    function _simulateReport(
-        Context memory self,
-        uint256 beaconValidators,
-        uint256 newCLBalance,
-        uint256 lastUnstETHIdToFinalize
-    ) internal returns (SimulateReportResult memory res) {
-        uint256 snapshotId = vm.snapshot();
-
-        vm.deal(self.withdrawalVault, newCLBalance);
-
-        vm.startPrank(address(self.accountingOracle));
-        res = _handleOracleReport(
+        _handleOracleReport(
             self,
-            HandleOracleReportParams({
-                reportTimestamp: block.timestamp,
+            IAccounting.ReportValues({
+                timestamp: block.timestamp - 1,
                 timeElapsed: 1 days,
                 clValidators: beaconValidators,
-                clBalance: 0,
+                clBalance: newCLBalance,
                 withdrawalVaultBalance: self.withdrawalVault.balance,
                 elRewardsVaultBalance: self.elRewardsVault.balance,
                 sharesRequestedToBurn: 0,
-                withdrawalFinalizationBatches: new uint256[](0),
-                simulatedShareRate: 0
+                withdrawalFinalizationBatches: withdrawalBatches.getResult(),
+                simulatedShareRate: targetShareRate
             })
         );
-        vm.stopPrank();
-        vm.revertTo(snapshotId);
     }
 
-    struct SimulateReportResult {
-        uint256 postTotalPooledEther;
-        uint256 postTotalShares;
-        uint256 withdrawals;
-        uint256 elRewards;
+    function _handleOracleReport(Context memory self, IAccounting.ReportValues memory params) private {
+        vm.startPrank(address(self.accountingOracle));
+        self.lidoLocator.accounting().handleOracleReport(params);
+        vm.stopPrank();
     }
 
     struct FinalizationBatchesParams {
@@ -686,5 +631,18 @@ library LidoUtils {
 
     function getLastVoteId(Context memory self) internal view returns (uint256) {
         return self.voting.votesLength() - 1;
+    }
+
+    // Lido v3 compact unstructured storage helpers
+    uint256 internal constant UINT128_LOW_MASK = ~uint128(0);
+    uint256 internal constant UINT128_HIGH_MASK = ~uint256(0) << 128;
+
+    function getLowUint128(address contractAddress, bytes32 position) internal view returns (uint256) {
+        return uint256(vm.load(contractAddress, position)) & UINT128_LOW_MASK;
+    }
+
+    function setLowUint128(address contractAddress, bytes32 position, uint256 data) internal {
+        uint256 high128 = uint256(vm.load(contractAddress, position)) & UINT128_HIGH_MASK;
+        vm.store(contractAddress, position, bytes32(high128 | (data & UINT128_LOW_MASK)));
     }
 }

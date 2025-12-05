@@ -34,6 +34,8 @@ import {ISealable} from "test/utils/interfaces/ISealable.sol";
 
 import {UnstETHRecordStatus} from "contracts/libraries/AssetsAccounting.sol";
 
+import {IOracleReportSanityChecker} from "test/utils/interfaces/IOracleReportSanityChecker.sol";
+
 import {
     ContractsDeployment,
     TGSetupDeployConfig,
@@ -721,10 +723,16 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
     // Withdrawal Queue Operations
     // ---
     function _finalizeWithdrawalQueue() internal {
+        IOracleReportSanityChecker.LimitsList memory limits =
+            _lido.lidoLocator.oracleReportSanityChecker().getOracleReportLimits();
+        _wait(Durations.from(limits.requestTimestampMargin + 1));
         _lido.finalizeWithdrawalQueue();
     }
 
     function _finalizeWithdrawalQueue(uint256 id) internal {
+        IOracleReportSanityChecker.LimitsList memory limits =
+            _lido.lidoLocator.oracleReportSanityChecker().getOracleReportLimits();
+        _wait(Durations.from(limits.requestTimestampMargin + 1));
         _lido.finalizeWithdrawalQueue(id);
     }
 

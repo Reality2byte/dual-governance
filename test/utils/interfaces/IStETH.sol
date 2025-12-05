@@ -75,4 +75,5 @@ interface IStETH is IStETHBase {
 
     function getBufferedEther() external view returns (uint256);
     function getTotalPooledEther() external view returns (uint256);
+    function getExternalEther() external view returns (uint256);
 }
