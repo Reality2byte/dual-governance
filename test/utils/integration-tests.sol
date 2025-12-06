@@ -736,8 +736,8 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
         _lido.finalizeWithdrawalQueue(id);
     }
 
-    function _simulateRebase(PercentD16 rebaseFactor) internal {
-        _lido.simulateRebase(rebaseFactor);
+    function _performRebase(PercentD16 rebaseFactor) internal {
+        _lido.performRebase(rebaseFactor);
     }
 
     function _resealSealable(address sealable) internal {

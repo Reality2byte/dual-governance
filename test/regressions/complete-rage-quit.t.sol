@@ -340,7 +340,7 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
             PercentD16 rebasePercent = PercentsD16.fromBasisPoints(_rebaseDeltaPercents[_round - 1]);
             console.log("Rebase happened: %s", rebasePercent.format());
 
-            _simulateRebase(rebasePercent);
+            _performRebase(rebasePercent);
             _assertRageQuitState();
         }
 

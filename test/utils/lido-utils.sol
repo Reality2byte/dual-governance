@@ -338,7 +338,7 @@ library LidoUtils {
         uint256 elRewardsVaultBalance;
     }
 
-    function simulateRebase(Context memory self, PercentD16 rebaseFactor) internal {
+    function performRebase(Context memory self, PercentD16 rebaseFactor) internal {
         performRebase(self, rebaseFactor, self.withdrawalQueue.getLastFinalizedRequestId());
     }
 

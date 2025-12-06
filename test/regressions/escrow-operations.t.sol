@@ -128,7 +128,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         _lockStETH(_VETOER_2, secondVetoerStETHAmount);
         _lockWstETH(_VETOER_2, secondVetoerWstETHAmount);
 
-        _simulateRebase(rebasePercent);
+        _performRebase(rebasePercent);
 
         _wait(_getMinAssetsLockDuration().plusSeconds(1));
 
@@ -436,7 +436,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         _lockWstETH(_VETOER_1, requestShares);
         _lockUnstETH(_VETOER_1, unstETHIds);
 
-        _simulateRebase(PercentsD16.fromBasisPoints(100_05)); // +0.05%
+        _performRebase(PercentsD16.fromBasisPoints(100_05)); // +0.05%
 
         vm.expectRevert();
         escrow.startRageQuit(_RAGE_QUIT_EXTRA_TIMELOCK, _RAGE_QUIT_WITHDRAWALS_TIMELOCK);
@@ -465,7 +465,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         assertTrue(unstETHToFinalizeDetails[0].status == UnstETHRecordStatus.Finalized);
         assertEq(unstETHToFinalizeDetails[0].claimableAmount.toUint256(), requestAmount);
 
-        _simulateRebase(PercentsD16.fromBasisPoints(100_01)); // +0.01%
+        _performRebase(PercentsD16.fromBasisPoints(100_01)); // +0.01%
 
         vm.prank(address(_dgDeployedContracts.dualGovernance));
         escrow.startRageQuit(_RAGE_QUIT_EXTRA_TIMELOCK, _RAGE_QUIT_WITHDRAWALS_TIMELOCK);

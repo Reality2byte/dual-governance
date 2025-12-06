@@ -158,7 +158,7 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
         _step("3. Positive rebase happened");
         {
             PercentD16 rebasePercent = PercentsD16.fromBasisPoints(100_01);
-            _simulateRebase(rebasePercent);
+            _performRebase(rebasePercent);
 
             PercentD16 newExpectedRageQuitSupport = PercentsD16.fromFraction({
                 numerator: _lido.stETH

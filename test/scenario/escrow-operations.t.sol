@@ -269,16 +269,14 @@ contract EscrowOperationsScenarioTest is DGScenarioTestSetup {
         // Check that unstETH nft of vetoer1 could be claimed
         uint256[] memory unstETHIdsToClaim = new uint256[](1);
         unstETHIdsToClaim[0] = lastRequestIdBeforeBatch;
-        uint256[] memory hints = _lido.withdrawalQueue.findCheckpointHints(
-            unstETHIdsToClaim, 1, _lido.withdrawalQueue.getLastCheckpointIndex()
-        );
+        uint256[] memory hints = _lido.withdrawalQueue
+            .findCheckpointHints(unstETHIdsToClaim, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
         escrow.claimUnstETH(unstETHIdsToClaim, hints);
 
         // The attempt to claim funds of untEth from Escrow generated batch will fail
         unstETHIdsToClaim[0] = requestIdFromBatch;
-        hints = _lido.withdrawalQueue.findCheckpointHints(
-            unstETHIdsToClaim, 1, _lido.withdrawalQueue.getLastCheckpointIndex()
-        );
+        hints = _lido.withdrawalQueue
+            .findCheckpointHints(unstETHIdsToClaim, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
         vm.expectRevert(
             abi.encodeWithSelector(
                 AssetsAccounting.InvalidUnstETHStatus.selector, requestIdFromBatch, UnstETHRecordStatus.NotLocked
@@ -341,15 +339,15 @@ contract EscrowOperationsScenarioTest is DGScenarioTestSetup {
 
             _wait(_getVetoSignallingDeactivationMaxDuration().minusSeconds(12 seconds));
             _finalizeWithdrawalQueue();
-            _simulateRebase(PercentsD16.fromBasisPoints(100_22));
+            _performRebase(PercentsD16.fromBasisPoints(100_22));
 
             assertTrue(_getVetoSignallingEscrow().getRageQuitSupport() >= _getSecondSealRageQuitSupport());
         }
 
         _step("3. markUnstETHFinalize() reverts as system entered RageQuit state");
         {
-            uint256[] memory hints =
-                _lido.withdrawalQueue.findCheckpointHints(unstETHIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
+            uint256[] memory hints = _lido.withdrawalQueue
+            .findCheckpointHints(unstETHIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
 
             vm.expectRevert(abi.encodeWithSelector(EscrowState.UnexpectedEscrowState.selector, State.RageQuitEscrow));
             this.externalMarkUnstETHFinalized(unstETHIds, hints);
