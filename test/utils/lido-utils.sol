@@ -94,7 +94,9 @@ address constant HOODI_DAO_AGENT = 0x0534aA41907c9631fae990960bCC72d75fA7cfeD;
 address constant HOODI_DAO_VOTING = 0x49B3512c44891bef83F8967d075121Bd1b07a01B;
 address constant HOODI_DAO_TOKEN_MANAGER = 0x8ab4a56721Ad8e68c6Ad86F9D9929782A78E39E5;
 
-// Lido V3 storage slots
+// ---
+// Lido V3 Storage Slots
+// ---
 
 bytes32 constant CL_BALANCE_AND_CL_VALIDATORS_SLOT = keccak256("lido.Lido.clBalanceAndClValidators");
 bytes32 constant BUFFERED_ETHER_AND_DEPOSITED_VALIDATORS_SLOT =
@@ -104,6 +106,10 @@ library LidoUtils {
     using DecimalsFormatting for uint256;
     using CallsScriptBuilder for CallsScriptBuilder.Context;
     using Uint256ArrayBuilder for Uint256ArrayBuilder.Context;
+
+    uint256 internal constant MAX_REQUESTS_PER_CALL = 1000;
+    uint256 internal constant UINT128_LOW_MASK = ~uint128(0);
+    uint256 internal constant UINT128_HIGH_MASK = ~uint256(0) << 128;
 
     struct Context {
         // core
@@ -202,7 +208,7 @@ library LidoUtils {
         uint256 approximatedAmount =
             totalSupply * PercentD16.unwrap(percentage) / PercentD16.unwrap(PercentsD16.fromBasisPoints(100_00));
 
-        /// @dev Below transformation helps to fix the rounding issue
+        // Adjust for rounding issues
         while (
             self.stETH.getPooledEthByShares(self.stETH.getSharesByPooledEth(approximatedAmount))
                     * PercentD16.unwrap(PercentsD16.fromBasisPoints(100_00)) / totalSupply
@@ -218,7 +224,7 @@ library LidoUtils {
         uint256 shares =
             totalShares * PercentD16.unwrap(percentage) / PercentD16.unwrap(PercentsD16.fromBasisPoints(100_00));
 
-        /// @dev Below transformation helps to fix the rounding issue
+        // Adjust for rounding issues
         PercentD16 resulting = PercentsD16.fromFraction({numerator: shares, denominator: totalShares});
         return shares * PercentD16.unwrap(percentage) / PercentD16.unwrap(resulting);
     }
@@ -228,12 +234,11 @@ library LidoUtils {
         PercentD16 percentage
     ) internal view returns (uint256) {
         uint256 totalSupply = self.stETH.totalSupply();
-        /// @dev Calculate amount and shares using the following rule:
-        /// bal / (totalSupply + bal) = percentage => bal = totalSupply * percentage / (1 - percentage)
+        // Calculate amount using: bal / (totalSupply + bal) = percentage => bal = totalSupply * percentage / (1 - percentage)
         uint256 amount = totalSupply * PercentD16.unwrap(percentage)
             / PercentD16.unwrap(PercentsD16.fromBasisPoints(100_00) - percentage);
 
-        /// @dev Below transformation helps to fix the rounding issue
+        // Adjust for rounding issues
         PercentD16 resulting = PercentsD16.fromFraction({numerator: amount, denominator: totalSupply + amount});
         return amount * PercentD16.unwrap(percentage) / PercentD16.unwrap(resulting);
     }
@@ -243,12 +248,11 @@ library LidoUtils {
         PercentD16 percentage
     ) internal view returns (uint256) {
         uint256 totalShares = self.stETH.getTotalShares();
-        /// @dev Calculate amount and shares using the following rule:
-        /// bal / (totalShares + bal) = percentage => bal = totalShares * percentage / (1 - percentage)
+        // Calculate shares using: bal / (totalShares + bal) = percentage => bal = totalShares * percentage / (1 - percentage)
         uint256 shares = totalShares * PercentD16.unwrap(percentage)
             / PercentD16.unwrap(PercentsD16.fromBasisPoints(100_00) - percentage);
 
-        /// @dev Below transformation helps to fix the rounding issue
+        // Adjust for rounding issues
         PercentD16 resulting = PercentsD16.fromFraction({numerator: shares, denominator: totalShares + shares});
         return shares * PercentD16.unwrap(percentage) / PercentD16.unwrap(resulting);
     }
@@ -295,7 +299,7 @@ library LidoUtils {
         uint256 nextRefSlot = refSlot + slotsPerFrame;
         uint256 nextFrameStart = genesisTime + nextRefSlot * secondsPerSlot;
 
-        // add 10 slots to be sure that the next frame starts
+        // Add 10 slots to ensure the next frame starts
         uint256 nextFrameStartWithOffset = nextFrameStart + secondsPerSlot * 10;
 
         return ReportTimeElapsed({
@@ -304,38 +308,6 @@ library LidoUtils {
             nextFrameStartWithOffset: nextFrameStartWithOffset,
             timeElapsed: nextFrameStartWithOffset - time
         });
-    }
-
-    function _getStakingModuleIdsWithNewlyExitedValidators() internal pure returns (uint256[] memory) {
-        uint256[] memory stakingModuleIdsWithNewlyExitedValidators = new uint256[](1);
-        stakingModuleIdsWithNewlyExitedValidators[0] = 1;
-        return stakingModuleIdsWithNewlyExitedValidators;
-    }
-
-    function _getSharesToBurn(Context memory self) private view returns (uint256) {
-        (uint256 coverShares, uint256 nonCoverShares) = self.burner.getSharesRequestedToBurn();
-        return coverShares + nonCoverShares;
-    }
-
-    function _getPostCLBalance(Context memory self, uint256 clDiff) private view returns (uint256) {
-        (,, uint256 beaconBalance) = self.stETH.getBeaconStat();
-        return beaconBalance + clDiff;
-    }
-
-    function _getPostBeaconValidators(
-        Context memory self,
-        uint256 clAppearedValidators
-    ) private view returns (uint256) {
-        (, uint256 beaconValidators,) = self.stETH.getBeaconStat();
-        return beaconValidators + clAppearedValidators;
-    }
-
-    struct SimulateReportParams {
-        uint256 refSlot;
-        uint256 beaconValidators;
-        uint256 clBalance;
-        uint256 withdrawalVaultBalance;
-        uint256 elRewardsVaultBalance;
     }
 
     function performRebase(Context memory self, PercentD16 rebaseFactor) internal {
@@ -355,9 +327,9 @@ library LidoUtils {
         self.oracleReportSanityChecker.setRequestTimestampMargin(0);
         vm.stopPrank();
 
-        // Ignoring the EL rewards vault balance
+        // Ignore EL rewards vault balance for test simplicity
         vm.deal(self.elRewardsVault, 0);
-        // Ignoring untracked withdrawals
+        // Ignore untracked withdrawals for test simplicity
         vm.deal(self.withdrawalVault, 0);
 
         uint256 clBalance = _sweepBufferedEther(self);
@@ -408,8 +380,8 @@ library LidoUtils {
             setLowUint128(address(self.stETH), BUFFERED_ETHER_AND_DEPOSITED_VALIDATORS_SLOT, 0);
 
             (,, uint256 updatedCLBalance) = self.stETH.getBeaconStat();
-            require(updatedCLBalance == clBalance, "Unexpected CL Balance");
-            require(self.stETH.getBufferedEther() == 0, "Non Zero Buffered Ether");
+            require(updatedCLBalance == clBalance, "Unexpected CL balance");
+            require(self.stETH.getBufferedEther() == 0, "Non-zero buffered ether");
         }
     }
 
@@ -520,7 +492,6 @@ library LidoUtils {
 
         uint256 blockTimestamp = block.timestamp;
         uint256 maxTimestamp = blockTimestamp - limits.requestTimestampMargin;
-        uint256 MAX_REQUESTS_PER_CALL = 1000;
 
         while (!batchesState.finished && batchesState.remainingEthBudget != 0) {
             batchesState = self.withdrawalQueue
@@ -539,8 +510,8 @@ library LidoUtils {
     function removeStakingLimit(Context memory self) external {
         bytes32 stakingLimitSlot = keccak256("lido.Lido.stakeLimit");
         uint256 stakingLimitEncodedData = uint256(vm.load(address(self.stETH), stakingLimitSlot));
-        // See the self encoding here: https://github.com/lidofinance/lido-dao/blob/5fcedc6e9a9f3ec154e69cff47c2b9e25503a78a/contracts/0.4.24/lib/StakeLimitUtils.sol#L10
-        // To remove staking limit, most significant 96 bits must be set to zero
+        // See the encoding here: https://github.com/lidofinance/lido-dao/blob/5fcedc6e9a9f3ec154e69cff47c2b9e25503a78a/contracts/0.4.24/lib/StakeLimitUtils.sol#L10
+        // To remove staking limit, set the most significant 96 bits to zero
         stakingLimitEncodedData &= 2 ** 160 - 1;
         vm.store(address(self.stETH), stakingLimitSlot, bytes32(stakingLimitEncodedData));
         assert(self.stETH.getCurrentStakeLimit() == type(uint256).max);
@@ -579,7 +550,7 @@ library LidoUtils {
 
         assert(self.ldoToken.balanceOf(account) >= self.voting.minAcceptQuorumPct());
 
-        // need to increase block number since MiniMe snapshotting relies on it
+        // Increase block number since MiniMe snapshotting relies on it
         vm.roll(block.number + 1);
         vm.warp(block.timestamp + 15);
     }
@@ -605,7 +576,6 @@ library LidoUtils {
         self.voting.vote(voteId, support, false);
     }
 
-    // Creates vote with given description and script, votes for it, and waits until it can be executed
     function adoptVote(
         Context memory self,
         string memory description,
@@ -633,9 +603,9 @@ library LidoUtils {
         return self.voting.votesLength() - 1;
     }
 
-    // Lido v3 compact unstructured storage helpers
-    uint256 internal constant UINT128_LOW_MASK = ~uint128(0);
-    uint256 internal constant UINT128_HIGH_MASK = ~uint256(0) << 128;
+    // ---
+    // Lido V3 Compact Unstructured Storage Helpers
+    // ---
 
     function getLowUint128(address contractAddress, bytes32 position) internal view returns (uint256) {
         return uint256(vm.load(contractAddress, position)) & UINT128_LOW_MASK;
