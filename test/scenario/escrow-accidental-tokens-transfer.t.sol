@@ -14,7 +14,7 @@ import {Escrow} from "contracts/Escrow.sol";
 import {LidoUtils, DGScenarioTestSetup} from "../utils/integration-tests.sol";
 
 uint256 constant ACCURACY = 2 wei;
-uint256 constant WITHDRAWALS_BATCH_SIZE = 10;
+uint256 constant WITHDRAWALS_BATCH_SIZE = 128;
 uint256 constant POOL_ACCUMULATED_ERROR = 150 wei;
 
 contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {

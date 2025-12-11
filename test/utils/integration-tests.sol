@@ -723,16 +723,10 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
     // Withdrawal Queue Operations
     // ---
     function _finalizeWithdrawalQueue() internal {
-        IOracleReportSanityChecker.LimitsList memory limits =
-            _lido.lidoLocator.oracleReportSanityChecker().getOracleReportLimits();
-        _wait(Durations.from(limits.requestTimestampMargin + 1));
         _lido.finalizeWithdrawalQueue();
     }
 
     function _finalizeWithdrawalQueue(uint256 id) internal {
-        IOracleReportSanityChecker.LimitsList memory limits =
-            _lido.lidoLocator.oracleReportSanityChecker().getOracleReportLimits();
-        _wait(Durations.from(limits.requestTimestampMargin + 1));
         _lido.finalizeWithdrawalQueue(id);
     }
 

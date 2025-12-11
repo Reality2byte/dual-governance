@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-/* solhint-disable no-console */
-
 import {Vm} from "forge-std/Test.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
@@ -317,7 +315,6 @@ library LidoUtils {
     function performRebase(Context memory self, PercentD16 rebaseFactor, uint256 lastUnstETHIdToFinalize) internal {
         uint256 shareRateBefore = self.stETH.getPooledEthByShares(10 ** 27);
         uint256 targetShareRate = shareRateBefore * PercentD16.unwrap(rebaseFactor) / HUNDRED_PERCENT_D16;
-
         vm.startPrank(address(self.agent));
         self.oracleReportSanityChecker
             .grantRole(self.oracleReportSanityChecker.ANNUAL_BALANCE_INCREASE_LIMIT_MANAGER_ROLE(), address(self.agent));
@@ -449,6 +446,9 @@ library LidoUtils {
 
             newCLBalance -= ethToCutFromCL;
         }
+
+        // waiting 1 block time to avoid report timestamp and newly created withdrawal requests time collision
+        vm.warp(block.timestamp + 12 seconds);
 
         _handleOracleReport(
             self,

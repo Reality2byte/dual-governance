@@ -177,10 +177,6 @@ contract LidoUtilsTest is DGScenarioTestSetup {
         assertEq(_lido.withdrawalQueue.getLastRequestId(), newRequestId);
         assertEq(_lido.withdrawalQueue.getLastFinalizedRequestId(), newRequestId - 1);
 
-        IOracleReportSanityChecker.LimitsList memory limits =
-            _lido.lidoLocator.oracleReportSanityChecker().getOracleReportLimits();
-        _wait(Durations.from(limits.requestTimestampMargin + 1));
-
         _lido.performRebase(PercentsD16.fromBasisPoints(negativeRebaseRateBp));
 
         uint256 shareRateAfterNegative = _lido.stETH.getPooledEthByShares(1 ether);
@@ -224,10 +220,6 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         assertEq(_lido.withdrawalQueue.getLastRequestId(), newRequestId);
         assertEq(_lido.withdrawalQueue.getLastFinalizedRequestId(), newRequestId - 1);
-
-        IOracleReportSanityChecker.LimitsList memory limits =
-            _lido.lidoLocator.oracleReportSanityChecker().getOracleReportLimits();
-        _wait(Durations.from(limits.requestTimestampMargin + 1));
 
         _lido.performRebase(PercentsD16.fromBasisPoints(positiveRebaseRateBp));
 
@@ -274,10 +266,6 @@ contract LidoUtilsTest is DGScenarioTestSetup {
         assertEq(_lido.withdrawalQueue.getLastRequestId(), firstRequestId);
         assertEq(_lido.withdrawalQueue.getLastFinalizedRequestId(), firstRequestId - 1);
 
-        IOracleReportSanityChecker.LimitsList memory limits =
-            _lido.lidoLocator.oracleReportSanityChecker().getOracleReportLimits();
-        _wait(Durations.from(limits.requestTimestampMargin + 1));
-
         _lido.performRebase(PercentsD16.fromBasisPoints(positiveRebaseRateBp));
 
         uint256 shareRateAfterPositive = _lido.stETH.getPooledEthByShares(1 ether);
@@ -289,8 +277,6 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         assertEq(_lido.withdrawalQueue.getLastRequestId(), secondRequestId);
         assertEq(secondRequestId, firstRequestId + 1);
-
-        _wait(Durations.from(limits.requestTimestampMargin + 1));
 
         _lido.performRebase(PercentsD16.fromBasisPoints(negativeRebaseRateBp), secondRequestId);
 

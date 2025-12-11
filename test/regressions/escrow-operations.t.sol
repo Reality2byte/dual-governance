@@ -106,7 +106,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         uint256 rebaseDeltaPercent,
         uint256 withdrawTurn
     ) public {
-        vm.assume(rebaseDeltaPercent < 27); // -0.25% ... +0.02%
+        vm.assume(rebaseDeltaPercent < 50); // -0.25% ... +0.25%
         PercentD16 rebasePercent = PercentsD16.fromBasisPoints(99_75 + rebaseDeltaPercent);
 
         uint256 firstVetoerStETHAmount = 10 * 10 ** 18;
