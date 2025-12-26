@@ -524,21 +524,21 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
             newTiebreakerCoreCommittee = tiebreakerDeployedContracts.tiebreakerCoreCommittee;
 
             // Deploying new ImmutableDualGovernanceConfigProvider with thresholds set to 100%
-            DualGovernanceConfig.Context memory newDualGovernanceConfigForOldDualGovernance = DualGovernanceConfig
-                .Context({
-                firstSealRageQuitSupport: PercentsD16.from(HUNDRED_PERCENT_D16 - 1),
-                secondSealRageQuitSupport: PercentsD16.from(HUNDRED_PERCENT_D16),
-                minAssetsLockDuration: Durations.from(1),
-                vetoSignallingMinDuration: Durations.from(0),
-                vetoSignallingMaxDuration: Durations.from(1),
-                vetoSignallingMinActiveDuration: Durations.from(0),
-                vetoSignallingDeactivationMaxDuration: Durations.from(0),
-                vetoCooldownDuration: Durations.from(0),
-                rageQuitExtensionPeriodDuration: Durations.from(0),
-                rageQuitEthWithdrawalsMinDelay: Durations.from(0),
-                rageQuitEthWithdrawalsMaxDelay: Durations.from(0),
-                rageQuitEthWithdrawalsDelayGrowth: Durations.from(0)
-            });
+            DualGovernanceConfig.Context memory newDualGovernanceConfigForOldDualGovernance =
+                DualGovernanceConfig.Context({
+                    firstSealRageQuitSupport: PercentsD16.from(HUNDRED_PERCENT_D16 - 1),
+                    secondSealRageQuitSupport: PercentsD16.from(HUNDRED_PERCENT_D16),
+                    minAssetsLockDuration: Durations.from(1),
+                    vetoSignallingMinDuration: Durations.from(0),
+                    vetoSignallingMaxDuration: Durations.from(1),
+                    vetoSignallingMinActiveDuration: Durations.from(0),
+                    vetoSignallingDeactivationMaxDuration: Durations.from(0),
+                    vetoCooldownDuration: Durations.from(0),
+                    rageQuitExtensionPeriodDuration: Durations.from(0),
+                    rageQuitEthWithdrawalsMinDelay: Durations.from(0),
+                    rageQuitEthWithdrawalsMaxDelay: Durations.from(0),
+                    rageQuitEthWithdrawalsDelayGrowth: Durations.from(0)
+                });
 
             newImmutableDualGovernanceConfigProvider =
                 new ImmutableDualGovernanceConfigProvider(newDualGovernanceConfigForOldDualGovernance);

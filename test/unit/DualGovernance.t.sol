@@ -76,15 +76,11 @@ contract DualGovernanceUnitTests is UnitTest {
     );
 
     DualGovernance.SignallingTokens internal _signallingTokens = DualGovernance.SignallingTokens({
-        stETH: _STETH_MOCK,
-        wstETH: _WSTETH_MOCK,
-        withdrawalQueue: _WITHDRAWAL_QUEUE_MOCK
+        stETH: _STETH_MOCK, wstETH: _WSTETH_MOCK, withdrawalQueue: _WITHDRAWAL_QUEUE_MOCK
     });
 
     DualGovernance.DualGovernanceComponents internal _dgComponents = DualGovernance.DualGovernanceComponents({
-        timelock: _timelock,
-        resealManager: _RESEAL_MANAGER_STUB,
-        configProvider: _configProvider
+        timelock: _timelock, resealManager: _RESEAL_MANAGER_STUB, configProvider: _configProvider
     });
 
     DualGovernance.SanityCheckParams internal _sanityCheckParams = DualGovernance.SanityCheckParams({
@@ -96,9 +92,7 @@ contract DualGovernanceUnitTests is UnitTest {
     });
 
     DualGovernance internal _dualGovernance = new DualGovernance({
-        components: _dgComponents,
-        signallingTokens: _signallingTokens,
-        sanityCheckParams: _sanityCheckParams
+        components: _dgComponents, signallingTokens: _signallingTokens, sanityCheckParams: _sanityCheckParams
     });
 
     Escrow internal _escrow;
@@ -133,9 +127,7 @@ contract DualGovernanceUnitTests is UnitTest {
         _sanityCheckParams.maxTiebreakerActivationTimeout = Durations.from(1000);
 
         new DualGovernance({
-            components: _dgComponents,
-            signallingTokens: _signallingTokens,
-            sanityCheckParams: _sanityCheckParams
+            components: _dgComponents, signallingTokens: _signallingTokens, sanityCheckParams: _sanityCheckParams
         });
     }
 
@@ -144,9 +136,7 @@ contract DualGovernanceUnitTests is UnitTest {
         _sanityCheckParams.maxTiebreakerActivationTimeout = Durations.from(1000);
 
         new DualGovernance({
-            components: _dgComponents,
-            signallingTokens: _signallingTokens,
-            sanityCheckParams: _sanityCheckParams
+            components: _dgComponents, signallingTokens: _signallingTokens, sanityCheckParams: _sanityCheckParams
         });
     }
 
@@ -163,9 +153,7 @@ contract DualGovernanceUnitTests is UnitTest {
         );
 
         new DualGovernance({
-            components: _dgComponents,
-            signallingTokens: _signallingTokens,
-            sanityCheckParams: _sanityCheckParams
+            components: _dgComponents, signallingTokens: _signallingTokens, sanityCheckParams: _sanityCheckParams
         });
     }
 
@@ -192,14 +180,10 @@ contract DualGovernanceUnitTests is UnitTest {
 
         DualGovernance dualGovernanceLocal = new DualGovernance({
             components: DualGovernance.DualGovernanceComponents({
-                timelock: _timelock,
-                resealManager: _RESEAL_MANAGER_STUB,
-                configProvider: _configProvider
+                timelock: _timelock, resealManager: _RESEAL_MANAGER_STUB, configProvider: _configProvider
             }),
             signallingTokens: DualGovernance.SignallingTokens({
-                stETH: _STETH_MOCK,
-                wstETH: _WSTETH_MOCK,
-                withdrawalQueue: _WITHDRAWAL_QUEUE_MOCK
+                stETH: _STETH_MOCK, wstETH: _WSTETH_MOCK, withdrawalQueue: _WITHDRAWAL_QUEUE_MOCK
             }),
             sanityCheckParams: DualGovernance.SanityCheckParams({
                 minWithdrawalsBatchSize: 4,

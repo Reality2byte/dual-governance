@@ -80,9 +80,10 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
         uint256[] memory vetoer2UnstETHIds;
 
         PercentD16 expectedRageQuitSupport = PercentsD16.fromFraction({
-            numerator: _lido.stETH.getPooledEthByShares(
-                vetoer1LockedStEthShares + vetoer1LockedWStEthAmount + vetoer1LockedUnStEthShares
-            ),
+            numerator: _lido.stETH
+                .getPooledEthByShares(
+                    vetoer1LockedStEthShares + vetoer1LockedWStEthAmount + vetoer1LockedUnStEthShares
+                ),
             denominator: _lido.stETH.totalSupply()
         });
 
@@ -157,12 +158,13 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
         _step("3. Positive rebase happened");
         {
             PercentD16 rebasePercent = PercentsD16.fromBasisPoints(100_01);
-            _simulateRebase(rebasePercent);
+            _performRebase(rebasePercent);
 
             PercentD16 newExpectedRageQuitSupport = PercentsD16.fromFraction({
-                numerator: _lido.stETH.getPooledEthByShares(
-                    vetoer1LockedStEthShares + vetoer1LockedWStEthAmount + vetoer1LockedUnStEthShares
-                ),
+                numerator: _lido.stETH
+                    .getPooledEthByShares(
+                        vetoer1LockedStEthShares + vetoer1LockedWStEthAmount + vetoer1LockedUnStEthShares
+                    ),
                 denominator: _lido.stETH.totalSupply()
             });
 
@@ -273,8 +275,7 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
         uint256[] memory vetoer2UnstETHIds;
 
         PercentD16 expectedRageQuitSupport = PercentsD16.fromFraction({
-            numerator: lockedStEthShares + lockedWStEth + lockedUnStEthShares,
-            denominator: _lido.stETH.getTotalShares()
+            numerator: lockedStEthShares + lockedWStEth + lockedUnStEthShares, denominator: _lido.stETH.getTotalShares()
         });
 
         _step("1. New proposal submission.");
@@ -415,14 +416,17 @@ contract EscrowAccidentalTokensTransferScenarioTest is DGScenarioTestSetup {
                 _finalizeWithdrawalQueue();
             }
 
+            assertEq(_lido.withdrawalQueue.getLastRequestId(), _lido.withdrawalQueue.getLastFinalizedRequestId());
+            // Claim all the withdrawals in batches.
             while (escrow.getUnclaimedUnstETHIdsCount() > 0) {
                 escrow.claimNextWithdrawalsBatch(WITHDRAWALS_BATCH_SIZE);
             }
 
+            assertEq(escrow.getUnclaimedUnstETHIdsCount(), 0);
+
             uint256 totalETHAfter = address(escrow).balance;
             uint256 totalLockedStETHAfter = _lido.stETH.balanceOf(address(escrow));
             totalWithdrawnETH = totalETHAfter - totalETHBefore;
-
             // During the RageQuit finalization of the batches each withdrawal NFT may loose 1-2 wei during
             // claiming due to share rate rounding error.
             assertApproxEqAbs(

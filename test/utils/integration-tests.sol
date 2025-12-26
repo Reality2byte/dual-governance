@@ -34,6 +34,8 @@ import {ISealable} from "test/utils/interfaces/ISealable.sol";
 
 import {UnstETHRecordStatus} from "contracts/libraries/AssetsAccounting.sol";
 
+import {IOracleReportSanityChecker} from "test/utils/interfaces/IOracleReportSanityChecker.sol";
+
 import {
     ContractsDeployment,
     TGSetupDeployConfig,
@@ -238,9 +240,7 @@ contract GovernedTimelockSetup is ForkTestSetup, TestingAssertEqExtender {
     function _getMaliciousCalls() internal view returns (ExternalCall[] memory calls) {
         calls = new ExternalCall[](1);
         calls[0] = ExternalCall({
-            target: address(_targetMock),
-            value: 0,
-            payload: abi.encodeCall(IPotentiallyDangerousContract.doRugPool, ())
+            target: address(_targetMock), value: 0, payload: abi.encodeCall(IPotentiallyDangerousContract.doRugPool, ())
         });
     }
 
@@ -496,9 +496,7 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
             }),
             dualGovernance: DualGovernanceContractDeployConfig.Context({
                 signallingTokens: DualGovernance.SignallingTokens({
-                    stETH: _lido.stETH,
-                    wstETH: _lido.wstETH,
-                    withdrawalQueue: _lido.withdrawalQueue
+                    stETH: _lido.stETH, wstETH: _lido.wstETH, withdrawalQueue: _lido.withdrawalQueue
                 }),
                 sanityCheckParams: DualGovernance.SanityCheckParams({
                     minWithdrawalsBatchSize: 4,
@@ -732,8 +730,8 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
         _lido.finalizeWithdrawalQueue(id);
     }
 
-    function _simulateRebase(PercentD16 rebaseFactor) internal {
-        _lido.simulateRebase(rebaseFactor);
+    function _performRebase(PercentD16 rebaseFactor) internal {
+        _lido.performRebase(rebaseFactor);
     }
 
     function _resealSealable(address sealable) internal {
@@ -1180,10 +1178,7 @@ contract TGScenarioTestSetup is GovernedTimelockSetup {
         proposalId = _submitProposal(address(_tgDeployedContracts.timelockedGovernance.GOVERNANCE()), calls, metadata);
     }
 
-    function _adoptProposal(
-        ExternalCall[] memory calls,
-        string memory metadata
-    ) internal returns (uint256 proposalId) {
+    function _adoptProposal(ExternalCall[] memory calls, string memory metadata) internal returns (uint256 proposalId) {
         proposalId = _adoptProposal(address(_tgDeployedContracts.timelockedGovernance.GOVERNANCE()), calls, metadata);
     }
 }

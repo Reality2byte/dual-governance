@@ -56,10 +56,16 @@ contract MainnetLaunch is DGScenarioTestSetup, LidoAddressesMainnet {
     bytes32 internal CHANGE_BUDGETS_ROLE = keccak256("CHANGE_BUDGETS_ROLE");
     uint256 internal constant VOTE_EXECUTION_BLOCK = 22817714;
 
+    uint256 constant MAINNET_VOTE_ENACTMENT_BLOCK = 22817714;
+
     function setUp() external {
         _deployDGSetup({isEmergencyProtectionEnabled: true, chainId: MAINNET_CHAIN_ID});
         if (block.number >= VOTE_EXECUTION_BLOCK) {
             vm.skip(true, "Skipping launch test. Vote already executed.");
+        }
+
+        if (block.number >= MAINNET_VOTE_ENACTMENT_BLOCK) {
+            vm.skip(true, "Dual Governance already enacted");
         }
 
         TimeConstraints timeConstraints = new TimeConstraints();

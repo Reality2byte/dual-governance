@@ -155,13 +155,11 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
         console.log("wstETH.totalSupply:", _lido.wstETH.totalSupply().formatEther());
         console.log(
             "wstETH total supply decreased for %s",
-            (
-                PercentsD16.fromBasisPoints(100_00)
+            (PercentsD16.fromBasisPoints(100_00)
                     - PercentsD16.fromFraction({
-                        numerator: _lido.wstETH.totalSupply(),
-                        denominator: initialWStEthTotalSupply
-                    })
-            ).format()
+                        numerator: _lido.wstETH.totalSupply(), denominator: initialWStEthTotalSupply
+                    }))
+            .format()
         );
 
         console.log("-------------------------");
@@ -342,7 +340,7 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
             PercentD16 rebasePercent = PercentsD16.fromBasisPoints(_rebaseDeltaPercents[_round - 1]);
             console.log("Rebase happened: %s", rebasePercent.format());
 
-            _simulateRebase(rebasePercent);
+            _performRebase(rebasePercent);
             _assertRageQuitState();
         }
 
@@ -411,9 +409,9 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
                     assertApproxEqAbs(_lido.stETH.balanceOf(vetoers[i]), 0, MIN_LOCKABLE_AMOUNT + ACCURACY);
                     assertLe(_lido.wstETH.getStETHByWstETH(_lido.wstETH.balanceOf(vetoers[i])), MIN_LOCKABLE_AMOUNT);
 
-                    uint256 expectedVetoerBalance = vetoerETHBalanceBefore
-                        + vetoersStEthSharesBefore[i] * escrowDetails.totalStETHClaimedETH.toUint256()
-                            / escrowDetails.totalStETHLockedShares.toUint256();
+                    uint256 expectedVetoerBalance = vetoerETHBalanceBefore + vetoersStEthSharesBefore[i]
+                        * escrowDetails.totalStETHClaimedETH.toUint256()
+                        / escrowDetails.totalStETHLockedShares.toUint256();
 
                     assertApproxEqAbs(
                         vetoers[i].balance,
@@ -781,9 +779,8 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
             }
         }
 
-        uint256[] memory hints = _lido.withdrawalQueue.findCheckpointHints(
-            unclaimedUnStEthIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex()
-        );
+        uint256[] memory hints = _lido.withdrawalQueue
+            .findCheckpointHints(unclaimedUnStEthIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
 
         uint256[] memory claimableETH = _lido.withdrawalQueue.getClaimableEther(unclaimedUnStEthIds, hints);
         uint256 expectedTotalClaimableETH;

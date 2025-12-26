@@ -98,7 +98,7 @@ contract TiebreakerRegressionTest is DGRegressionTestSetup {
 
                 _executeScheduleProposalBySubCommittee(subTiebreaker, proposalIdToExecute);
 
-                (support, quorum, /* quorumAt */, isExecuted) =
+                (support, quorum,/* quorumAt */, isExecuted) =
                     coreTiebreaker.getScheduleProposalState(proposalIdToExecute);
 
                 assertFalse(isExecuted);
@@ -287,7 +287,7 @@ contract TiebreakerRegressionTest is DGRegressionTestSetup {
 
                 _executeResumeProposalBySubCommittee(subTiebreaker, sealableWithdrawalBlockers[sealableIndex]);
 
-                (support, quorum, /* quorumAt */, isExecuted) = coreTiebreaker.getSealableResumeState(
+                (support, quorum,/* quorumAt */, isExecuted) = coreTiebreaker.getSealableResumeState(
                     sealableWithdrawalBlockers[sealableIndex],
                     coreTiebreaker.getSealableResumeNonce(sealableWithdrawalBlockers[0])
                 );
@@ -316,7 +316,7 @@ contract TiebreakerRegressionTest is DGRegressionTestSetup {
         for (uint256 j = 0; j < subTiebreakerQuorum; ++j) {
             vm.prank(subTiebreakerMembers[j]);
             subTiebreaker.scheduleProposal(proposalIdToExecute);
-            (uint256 support, /* quorum */, /* quorumAt */, bool isExecuted) =
+            (uint256 support,/* quorum */,/* quorumAt */, bool isExecuted) =
                 subTiebreaker.getScheduleProposalState(proposalIdToExecute);
             assertEq(support, j + 1);
             assertFalse(isExecuted);
@@ -324,7 +324,7 @@ contract TiebreakerRegressionTest is DGRegressionTestSetup {
         _wait(subTiebreaker.getTimelockDuration());
         subTiebreaker.executeScheduleProposal(proposalIdToExecute);
 
-        (uint256 _support, uint256 quorum, /* quorumAt */, bool _isExecuted) =
+        (uint256 _support, uint256 quorum,/* quorumAt */, bool _isExecuted) =
             subTiebreaker.getScheduleProposalState(proposalIdToExecute);
         assertEq(_support, quorum);
         assertTrue(_isExecuted);
@@ -340,7 +340,7 @@ contract TiebreakerRegressionTest is DGRegressionTestSetup {
         for (uint256 j = 0; j < subTiebreakerQuorum; ++j) {
             vm.prank(subTiebreakerMembers[j]);
             subTiebreaker.sealableResume(sealableToUnpause);
-            (uint256 support, /* quorum */, /* quorumAt */, bool isExecuted) =
+            (uint256 support,/* quorum */,/* quorumAt */, bool isExecuted) =
                 subTiebreaker.getSealableResumeState(sealableToUnpause);
             assertEq(support, j + 1);
             assertFalse(isExecuted);
@@ -348,7 +348,7 @@ contract TiebreakerRegressionTest is DGRegressionTestSetup {
         _wait(subTiebreaker.getTimelockDuration());
         subTiebreaker.executeSealableResume(sealableToUnpause);
 
-        (uint256 _support, uint256 quorum, /* quorumAt */, bool _isExecuted) =
+        (uint256 _support, uint256 quorum,/* quorumAt */, bool _isExecuted) =
             subTiebreaker.getSealableResumeState(sealableToUnpause);
         assertEq(_support, quorum);
         assertTrue(_isExecuted);
