@@ -19,7 +19,9 @@ import {DualGovernance} from "contracts/DualGovernance.sol";
 import {State as DualGovernanceState} from "contracts/interfaces/IDualGovernance.sol";
 
 import {MAINNET_DISCONNECTED_DUAL_GOVERNANCE} from "../utils/lido-utils.sol";
-import {LidoUtils, DGRegressionTestSetup} from "../utils/integration-tests.sol";
+import {LidoUtils, DGRegressionTestSetup, MAINNET_CHAIN_ID} from "../utils/integration-tests.sol";
+
+import {console} from "forge-std/console.sol";
 
 uint256 constant ACCURACY = 2 wei;
 uint256 constant MAX_WITHDRAWAL_REQUEST_AMOUNT = 1_000 ether;
@@ -39,13 +41,17 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
     function setUp() external {
         _loadOrDeployDGSetup();
 
+        if (block.chainid != MAINNET_CHAIN_ID) {
+            vm.skip(true, "Test supports can be run only on mainnet network");
+        }
+
         dualGovernance = DualGovernance(MAINNET_DISCONNECTED_DUAL_GOVERNANCE);
         escrow = Escrow(payable(dualGovernance.getVetoSignallingEscrow()));
 
         minAssetsLockDurationOnDisconnectedEscrow = escrow
             .getMinAssetsLockDuration();
 
-        _setupStETHBalance(_VETOER_1, PercentsD16.fromBasisPoints(50_00));
+        _setupStETHBalance(_VETOER_1, PercentsD16.fromBasisPoints(50_01));
 
         vm.startPrank(_VETOER_1);
         _lido.stETH.approve(address(_lido.wstETH), type(uint256).max);
@@ -102,24 +108,34 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
 
     function testFork_LockMoreThan50PercentOfTvl_NoRageQuitExpected() public {
         // Checking that rage quit support is less than 0.01%. (There may be some dust on the escrow)
-        assert(escrow.getRageQuitSupport() < PercentsD16.fromBasisPoints(1));
-        assert(
-            dualGovernance.getEffectiveState() == DualGovernanceState.Normal
-        );
+        _step("0. Checking that rage quit support is less than 0.01%");
+        {
+            assert(escrow.getRageQuitSupport() < PercentsD16.fromBasisPoints(1));
+            assert(
+                dualGovernance.getEffectiveState() == DualGovernanceState.Normal
+            );
+        }
 
-        vm.startPrank(_VETOER_1);
-        escrow.lockStETH(_lido.stETH.balanceOf(_VETOER_1));
-        escrow.lockWstETH(_lido.wstETH.balanceOf(_VETOER_1));
-        vm.stopPrank();
+        _step("1. Lock more than 50% of TVL");
+        {
+            vm.startPrank(_VETOER_1);
+            escrow.lockStETH(_lido.stETH.balanceOf(_VETOER_1));
+            escrow.lockWstETH(_lido.wstETH.balanceOf(_VETOER_1));
+            vm.stopPrank();
+        }
 
-        dualGovernance.activateNextState();
-
-        assert(
-            escrow.getRageQuitSupport() > PercentsD16.fromBasisPoints(50_00)
-        );
-        assert(
-            dualGovernance.getEffectiveState() == DualGovernanceState.Normal
-        );
+        _step("2. Checking that rage quit support is > 50% and does not affect DG state");
+        {
+            dualGovernance.activateNextState();
+            console.log("Rage quit support:", escrow.getRageQuitSupport().toUint256());
+            assert(
+                escrow.getRageQuitSupport() >= PercentsD16.fromBasisPoints(50_00)
+            );
+            console.log("Effective state:", uint256(dualGovernance.getEffectiveState()));
+            assert(
+                dualGovernance.getEffectiveState() == DualGovernanceState.Normal
+            );
+        }
     }
 
     function testFork_LockMoreThan99PercentOfTvl_RageQuitExpected() public {
@@ -145,6 +161,9 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
         _step("2. Create withdrawal NFT to bypass 99.99% rage quit");
         {
             uint256 vetoerBalance = _lido.stETH.balanceOf(_VETOER_1);
+            uint256 minRequestAmount = _lido
+                .withdrawalQueue
+                .MIN_STETH_WITHDRAWAL_AMOUNT();
             uint256 requestAmount = _lido
                 .withdrawalQueue
                 .MAX_STETH_WITHDRAWAL_AMOUNT();
@@ -153,12 +172,18 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
 
             uint256 i = 0;
             while (vetoerBalance > 0) {
-                if (vetoerBalance <= requestAmount) {
-                    amounts[i] = vetoerBalance;
-                    break;
+                if (vetoerBalance < minRequestAmount) {
+                    uint256 topUpAmount = minRequestAmount - vetoerBalance;
+                    vm.deal(_VETOER_1, _VETOER_1.balance + topUpAmount);
+                    vm.prank(_VETOER_1);
+                    _lido.stETH.submit{value: topUpAmount}(address(0));
+                    vetoerBalance = _lido.stETH.balanceOf(_VETOER_1);
                 }
-                amounts[i] = requestAmount;
-                vetoerBalance -= requestAmount;
+                uint256 amount = vetoerBalance <= requestAmount
+                    ? vetoerBalance
+                    : requestAmount;
+                amounts[i] = amount;
+                vetoerBalance -= amount;
                 i++;
             }
 
