@@ -160,7 +160,7 @@ Rage quit is a global process of withdrawing stETH and wstETH locked in the sign
 
 ![image](https://github.com/lidofinance/dual-governance/assets/1699593/4b42490e-4d67-4277-b1e1-390d4c385ca8)
 
-In the [governance state machine](#Governance-state), the rage quit process is represented by the `RageQuit` global state. While this state is active, no new proposal can be scheduled for execution, but previously scheduled proposals may still be executed if their delays have elapsed. Thus, rage quit contributes to dynamic timelocks of all pending (unscheduled) proposals but does not prevent execution of already scheduled ones.
+In the [governance state machine](#Governance-state), the rage quit process is represented by the `RageQuit` global state. While this state is active, no proposals can be scheduled for execution. However, proposals that were already scheduled may still be executed once their after-schedule delays, as defined by the `EmergencyProtectedTimelock`, have elapsed. Thus, rage quit enforces dynamic timelocks on all pending (unscheduled) proposals without blocking the execution of those already scheduled.
 
 At any time, only one instance of the rage quit process can be active.
 
