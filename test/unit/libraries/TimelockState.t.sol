@@ -109,11 +109,13 @@ contract TimelockStateUnitTests is UnitTest {
     }
 
     function testFuzz_getAfterSubmitDelay_HappyPath(Duration newAfterSubmitDelay) external {
+        vm.assume(newAfterSubmitDelay != _afterSubmitDelay);
         TimelockState.setAfterSubmitDelay(_timelockState, newAfterSubmitDelay, newAfterSubmitDelay);
         assertEq(TimelockState.getAfterSubmitDelay(_timelockState), newAfterSubmitDelay);
     }
 
     function testFuzz_getAfterScheduleDelay_HappyPath(Duration newAfterScheduleDelay) external {
+        vm.assume(newAfterScheduleDelay != _afterScheduleDelay);
         TimelockState.setAfterScheduleDelay(_timelockState, newAfterScheduleDelay, newAfterScheduleDelay);
         assertEq(TimelockState.getAfterScheduleDelay(_timelockState), newAfterScheduleDelay);
     }
