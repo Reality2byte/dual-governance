@@ -204,40 +204,46 @@ library LidoUtils {
         ctx.tokenManager = IAragonForwarder(HOODI_DAO_TOKEN_MANAGER);
     }
 
+    struct DevnetDeploymentParams {
+        address stEth;
+        address wstETH;
+        address burner;
+        address hashConsensus;
+        address withdrawalQueue;
+        address accountingOracle;
+        address oracleReportSanityChecker;
+        address stakingRouter;
+        address elRewardsVault;
+        address withdrawalVault;
+        address daoAcl;
+        address daoAgent;
+        address voting;
+        address ldoToken;
+        address daoTokenManager;
+        address lidoLocator;
+    }
+
     function devnetDeployment(
-        address stEth,
-        address wstETH,
-        address burner,
-        address hashConsensus,
-        address withdrawalQueue,
-        address accountingOracle,
-        address oracleReportSanityChecker,
-        address stakingRouter,
-        address elRewardsVault,
-        address withdrawalVault,
-        address daoAcl,
-        address daoAgent,
-        address voting,
-        address ldoToken,
-        address daoTokenManager
+        DevnetDeploymentParams memory params
     ) internal pure returns (Context memory ctx) {
-        ctx.stETH = IStETH(stEth);
-        ctx.wstETH = IWstETH(wstETH);
-        ctx.burner = IBurner(burner);
-        ctx.hashConsensus = IHashConsensus(hashConsensus);
-        ctx.withdrawalQueue = IWithdrawalQueue(withdrawalQueue);
-        ctx.accountingOracle = IAccountingOracle(accountingOracle);
-        ctx.oracleReportSanityChecker = IOracleReportSanityChecker(oracleReportSanityChecker);
-        ctx.stakingRouter = IStakingRouter(stakingRouter);
+        ctx.stETH = IStETH(params.stEth);
+        ctx.wstETH = IWstETH(params.wstETH);
+        ctx.burner = IBurner(params.burner);
+        ctx.hashConsensus = IHashConsensus(params.hashConsensus);
+        ctx.withdrawalQueue = IWithdrawalQueue(params.withdrawalQueue);
+        ctx.accountingOracle = IAccountingOracle(params.accountingOracle);
+        ctx.oracleReportSanityChecker = IOracleReportSanityChecker(params.oracleReportSanityChecker);
+        ctx.stakingRouter = IStakingRouter(params.stakingRouter);
+        ctx.lidoLocator = ILidoLocator(params.lidoLocator);
 
-        ctx.elRewardsVault = elRewardsVault;
-        ctx.withdrawalVault = withdrawalVault;
+        ctx.elRewardsVault = params.elRewardsVault;
+        ctx.withdrawalVault = params.withdrawalVault;
 
-        ctx.acl = IAragonACL(daoAcl);
-        ctx.agent = IAragonAgent(daoAgent);
-        ctx.voting = IAragonVoting(voting);
-        ctx.ldoToken = IERC20(ldoToken);
-        ctx.tokenManager = IAragonForwarder(daoTokenManager);
+        ctx.acl = IAragonACL(params.daoAcl);
+        ctx.agent = IAragonAgent(params.daoAgent);
+        ctx.voting = IAragonVoting(params.voting);
+        ctx.ldoToken = IERC20(params.ldoToken);
+        ctx.tokenManager = IAragonForwarder(params.daoTokenManager);
     }
 
     function calcAmountFromPercentageOfTVL(

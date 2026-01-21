@@ -85,21 +85,24 @@ abstract contract ForkTestSetup is Test {
         } else {
             vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
             _lido = LidoUtils.devnetDeployment(
-                vm.envAddress("DG_TESTS_LIDO_ST_ETH"),
-                vm.envAddress("DG_TESTS_LIDO_WST_ETH"),
-                vm.envAddress("DG_TESTS_LIDO_BURNER"),
-                vm.envAddress("DG_TESTS_LIDO_HASH_CONSENSUS"),
-                vm.envAddress("DG_TESTS_LIDO_WITHDRAWAL_QUEUE"),
-                vm.envAddress("DG_TESTS_LIDO_ACCOUNTING_ORACLE"),
-                vm.envAddress("DG_TESTS_LIDO_ORACLE_REPORT_SANITY_CHECKER"),
-                vm.envAddress("DG_TESTS_LIDO_STAKING_ROUTER"),
-                vm.envAddress("DG_TESTS_LIDO_EL_REWARDS_VAULT"),
-                vm.envAddress("DG_TESTS_LIDO_WITHDRAWAL_VAULT"),
-                vm.envAddress("DG_TESTS_LIDO_DAO_ACL"),
-                vm.envAddress("DG_TESTS_LIDO_DAO_AGENT"),
-                vm.envAddress("DG_TESTS_LIDO_DAO_VOTING"),
-                vm.envAddress("DG_TESTS_LIDO_LDO_TOKEN"),
-                vm.envAddress("DG_TESTS_LIDO_DAO_TOKEN_MANAGER")
+                LidoUtils.DevnetDeploymentParams({
+                    stEth: vm.envAddress("DG_TESTS_LIDO_ST_ETH"),
+                    wstETH: vm.envAddress("DG_TESTS_LIDO_WST_ETH"),
+                    burner: vm.envAddress("DG_TESTS_LIDO_BURNER"),
+                    hashConsensus: vm.envAddress("DG_TESTS_LIDO_HASH_CONSENSUS"),
+                    withdrawalQueue: vm.envAddress("DG_TESTS_LIDO_WITHDRAWAL_QUEUE"),
+                    accountingOracle: vm.envAddress("DG_TESTS_LIDO_ACCOUNTING_ORACLE"),
+                    oracleReportSanityChecker: vm.envAddress("DG_TESTS_LIDO_ORACLE_REPORT_SANITY_CHECKER"),
+                    stakingRouter: vm.envAddress("DG_TESTS_LIDO_STAKING_ROUTER"),
+                    elRewardsVault: vm.envAddress("DG_TESTS_LIDO_EL_REWARDS_VAULT"),
+                    withdrawalVault: vm.envAddress("DG_TESTS_LIDO_WITHDRAWAL_VAULT"),
+                    daoAcl: vm.envAddress("DG_TESTS_LIDO_DAO_ACL"),
+                    daoAgent: vm.envAddress("DG_TESTS_LIDO_DAO_AGENT"),
+                    voting: vm.envAddress("DG_TESTS_LIDO_DAO_VOTING"),
+                    ldoToken: vm.envAddress("DG_TESTS_LIDO_LDO_TOKEN"),
+                    daoTokenManager: vm.envAddress("DG_TESTS_LIDO_DAO_TOKEN_MANAGER"),
+                    lidoLocator: vm.envAddress("DG_TESTS_LIDO_LOCATOR")
+                })
             );
         }
 
