@@ -295,7 +295,6 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
             );
 
             TiebreakerDeployConfig.Context memory tiebreakerConfig = _dgDeployConfig.tiebreaker;
-            tiebreakerConfig.chainId = _dgDeployConfig.chainId;
             tiebreakerConfig.owner = address(_dgDeployedContracts.adminExecutor);
             tiebreakerConfig.dualGovernance = address(newDualGovernance);
 
@@ -517,7 +516,6 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
             );
 
             TiebreakerDeployConfig.Context memory tiebreakerConfig = _dgDeployConfig.tiebreaker;
-            tiebreakerConfig.chainId = _dgDeployConfig.chainId;
             tiebreakerConfig.owner = address(_dgDeployedContracts.adminExecutor);
             tiebreakerConfig.dualGovernance = address(newDualGovernance);
 
@@ -778,7 +776,6 @@ contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
             );
 
             TiebreakerDeployConfig.Context memory tiebreakerConfig = _dgDeployConfig.tiebreaker;
-            tiebreakerConfig.chainId = _dgDeployConfig.chainId;
             tiebreakerConfig.owner = address(_dgDeployedContracts.adminExecutor);
             tiebreakerConfig.dualGovernance = address(newDualGovernance);
 

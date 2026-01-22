@@ -37,15 +37,16 @@ import {UnstETHRecordStatus} from "contracts/libraries/AssetsAccounting.sol";
 import {IOracleReportSanityChecker} from "test/utils/interfaces/IOracleReportSanityChecker.sol";
 
 import {
+    DGSetupDeployConfig, DGSetupDeployArtifacts, DGSetupDeployedContracts
+} from "scripts/utils/deployment/Setup.sol";
+import {TimelockContractDeployConfig} from "scripts/utils/deployment/Timelock.sol";
+
+import {
     ContractsDeployment,
     TGSetupDeployConfig,
     DualGovernanceConfig,
     TGSetupDeployedContracts,
-    DGSetupDeployConfig,
-    DGSetupDeployArtifacts,
-    DGSetupDeployedContracts,
-    DualGovernanceContractDeployConfig,
-    TimelockContractDeployConfig
+    DualGovernanceContractDeployConfig
 } from "scripts/utils/contracts-deployment.sol";
 import {TiebreakerDeployConfig, TiebreakerSubCommitteeDeployConfig} from "scripts/utils/deployment/Tiebreaker.sol";
 
@@ -692,7 +693,6 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
         _dgDeployConfig.dualGovernance = config.dualGovernance;
         _dgDeployConfig.dualGovernanceConfigProvider = config.dualGovernanceConfigProvider;
 
-        _dgDeployConfig.tiebreaker.chainId = config.chainId;
         _dgDeployConfig.tiebreaker.quorum = config.tiebreaker.quorum;
         _dgDeployConfig.tiebreaker.executionDelay = config.tiebreaker.executionDelay;
 

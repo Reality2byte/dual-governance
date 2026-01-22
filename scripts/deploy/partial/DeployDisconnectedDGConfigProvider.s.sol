@@ -15,9 +15,8 @@ import {
     ImmutableDualGovernanceConfigProviderDeployConfig,
     ImmutableDualGovernanceConfigProviderDeployArtifacts,
     ImmutableDualGovernanceConfigProviderDeployedContracts
-} from "../utils/deployment/ImmutableDualGovernanceConfigProvider.sol";
-
-import {ContractsDeployment} from "../utils/contracts-deployment.sol";
+} from "scripts/utils/deployment/ImmutableDualGovernanceConfigProvider.sol";
+import {ContractsDeployment} from "scripts/utils/contracts-deployment.sol";
 
 contract DeployDisconnectedDGConfigProvider is Script {
     using ImmutableDualGovernanceConfigProviderDeployConfig for DualGovernanceConfig.Context;
