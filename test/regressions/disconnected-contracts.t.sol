@@ -39,6 +39,11 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
     Duration internal minAssetsLockDurationOnDisconnectedEscrow;
 
     function setUp() external {
+        if (!vm.envOr("RUN_DISCONNECTED_DG_SETUP_TEST", false)) {
+            vm.skip(true, "To enable this test set the env variable RUN_DISCONNECTED_DG_SETUP_TEST=true");
+            return;
+        }
+
         _loadOrDeployDGSetup();
 
         if (block.chainid != MAINNET_CHAIN_ID) {

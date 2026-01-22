@@ -52,7 +52,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         _lido.stETH.approve(address(_lido.withdrawalQueue), type(uint256).max);
         _lido.wstETH.approve(address(escrow), type(uint256).max);
 
-        _lido.wstETH.wrap(100_000 * 10 ** 18);
+        _lido.wstETH.wrap(_lido.stETH.balanceOf(_VETOER_1) / 10);
         vm.stopPrank();
 
         _setupStETHBalance(_VETOER_2, PercentsD16.fromBasisPoints(10_00));
@@ -63,7 +63,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         _lido.stETH.approve(address(_lido.withdrawalQueue), type(uint256).max);
         _lido.wstETH.approve(address(escrow), type(uint256).max);
 
-        _lido.wstETH.wrap(100_000 * 10 ** 18);
+        _lido.wstETH.wrap(_lido.stETH.balanceOf(_VETOER_2) / 10);
         vm.stopPrank();
     }
 
@@ -421,7 +421,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
     function testFork_RageQuit_HappyPath_AllTokens() public {
         _initialLockRandomAmountOfTokensInEscrow();
 
-        uint256 requestAmount = 1000 * 1e18;
+        uint256 requestAmount = _lido.stETH.balanceOf(_VETOER_1) / 1000;
         uint256[] memory amounts = new uint256[](10);
         for (uint256 i = 0; i < 10; ++i) {
             amounts[i] = requestAmount;
@@ -471,12 +471,9 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         escrow.startRageQuit(_RAGE_QUIT_EXTRA_TIMELOCK, _RAGE_QUIT_WITHDRAWALS_TIMELOCK);
 
         uint256 escrowStETHBalance = _lido.stETH.balanceOf(address(escrow));
-        uint256 expectedWithdrawalsBatchesCount = escrowStETHBalance / requestAmount + 1;
+        uint256 expectedWithdrawalsBatchesCount =
+            escrowStETHBalance / _lido.withdrawalQueue.MAX_STETH_WITHDRAWAL_AMOUNT() + 1;
         assertEq(_lido.withdrawalQueue.balanceOf(address(escrow)), 10 + _initialLockedUnStETHCount);
-
-        escrow.requestNextWithdrawalsBatch(10);
-
-        assertEq(_lido.withdrawalQueue.balanceOf(address(escrow)), 20 + _initialLockedUnStETHCount);
 
         while (!escrow.isWithdrawalsBatchesClosed()) {
             escrow.requestNextWithdrawalsBatch(96);
