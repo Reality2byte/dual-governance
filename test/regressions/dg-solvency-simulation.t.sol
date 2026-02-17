@@ -417,14 +417,15 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             if (i == 0) {
                 assertApproxEqAbs(
                     address(rageQuitEscrow).balance,
-                    _accidentalETHTransfersByEscrow[address(rageQuitEscrow)] + _initialVetoSignallingEscrowLockedShares,
-                    0.001 ether
+                    _accidentalETHTransfersByEscrow[address(rageQuitEscrow)]
+                        + _lido.stETH.getPooledEthByShares(_initialVetoSignallingEscrowLockedShares),
+                    0.00001 ether
                 );
             } else {
                 assertApproxEqAbs(
                     address(rageQuitEscrow).balance,
                     _accidentalETHTransfersByEscrow[address(rageQuitEscrow)],
-                    0.001 ether
+                    0.00001 ether
                 );
             }
 
@@ -460,9 +461,15 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
     }
 
     function _reportAndRebase() internal {
-        uint256 requestIdToFinalize = _random.nextUint256(
-            _lido.withdrawalQueue.getLastFinalizedRequestId() + 1, _lido.withdrawalQueue.getLastRequestId() + 1
-        );
+        uint256 lastFinalizedRequestId = _lido.withdrawalQueue.getLastFinalizedRequestId();
+        uint256 lastRequestId = _lido.withdrawalQueue.getLastRequestId();
+
+        uint256 requestIdToFinalize;
+        if (lastFinalizedRequestId >= lastRequestId) {
+            requestIdToFinalize = lastRequestId;
+        } else {
+            requestIdToFinalize = _random.nextUint256(lastFinalizedRequestId + 1, lastRequestId + 1);
+        }
 
         _reportAndRebase(requestIdToFinalize);
     }
@@ -560,17 +567,18 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
                 uint256 holderBalanceBefore = _accountsDetails[account].ethBalanceBefore
                     + _accountsDetails[account].stETHBalanceBefore + _accountsDetails[account].unstETHBalanceBefore;
                 uint256 minBalanceEstimation = holderBalanceBefore * _negativeRebaseAccumulated / HUNDRED_PERCENT_D16;
-                // TODO: Wsteth lock/unlock may cause shares error on each cycle
+                uint256 maxBalanceEstimation = holderBalanceBefore * _positiveRebaseAccumulated / HUNDRED_PERCENT_D16;
+
+                // NOTICE: Wsteth lock/unlock may cause shares error on each cycle
                 if (minBalanceEstimation < 100 wei) {
                     minBalanceEstimation = 0;
                 } else {
                     minBalanceEstimation -= 100 wei;
                 }
+                maxBalanceEstimation += 100 wei;
 
                 uint256 holderBalanceAfter =
                     _calculateTotalAccountBalanceInETH(account, ethLockedUnclaimed, sharesLockedInEscrows);
-
-                uint256 maxBalanceEstimation = holderBalanceBefore * _positiveRebaseAccumulated / HUNDRED_PERCENT_D16;
 
                 assertTrue(holderBalanceAfter >= minBalanceEstimation);
                 assertTrue(holderBalanceAfter <= maxBalanceEstimation);
@@ -1020,7 +1028,7 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             _totalSubmittedStETH += submitAmount;
             _accountsDetails[account].stETHSubmitted += submitAmount;
 
-            assertApproxEqAbs(_lido.stETH.balanceOf(account), stEthBalanceBefore + submitAmount, 2 gwei);
+            assertApproxEqAbs(_lido.stETH.balanceOf(account), stEthBalanceBefore + submitAmount, 2 wei);
             assertEq(account.balance, balance - submitAmount);
 
             _debug.debug("Account %s submitted %s stETH.", account, submitAmount.formatEther(), balance.formatEther());
@@ -1057,8 +1065,8 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             _totalSubmittedWstETH += wstEthMinted;
             _accountsDetails[account].wstETHSubmitted += wstEthMinted;
 
-            assertApproxEqAbs(_lido.stETH.balanceOf(account), stEthBalance, 2 gwei);
-            assertApproxEqAbs(_lido.wstETH.balanceOf(account), wstEthBalance + wstEthMinted, 2 gwei);
+            assertApproxEqAbs(_lido.stETH.balanceOf(account), stEthBalance, 2 wei);
+            assertApproxEqAbs(_lido.wstETH.balanceOf(account), wstEthBalance + wstEthMinted, 2 wei);
             assertEq(account.balance, balance - submitAmount);
 
             _debug.debug("Account %s submitted %s wstETH.", account, wstEthMinted.formatEther(), balance.formatEther());
@@ -2171,7 +2179,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             _totalLockedWstETHByRealAccounts.formatEther()
         );
 
-        //  TODO: Add counters for unstETH
         LogTable.logRow("Escrow Lock unstETH");
         LogTable.logRow(
             "Sim Accounts",

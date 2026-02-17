@@ -223,9 +223,7 @@ library LidoUtils {
         address lidoLocator;
     }
 
-    function devnetDeployment(
-        DevnetDeploymentParams memory params
-    ) internal pure returns (Context memory ctx) {
+    function devnetDeployment(DevnetDeploymentParams memory params) internal pure returns (Context memory ctx) {
         ctx.stETH = IStETH(params.stEth);
         ctx.wstETH = IWstETH(params.wstETH);
         ctx.burner = IBurner(params.burner);
@@ -246,10 +244,7 @@ library LidoUtils {
         ctx.tokenManager = IAragonForwarder(params.daoTokenManager);
     }
 
-    function calcAmountFromPercentageOfTVL(
-        Context memory self,
-        PercentD16 percentage
-    ) internal view returns (uint256) {
+    function calcAmountFromPercentageOfTVL(Context memory self, PercentD16 percentage) internal view returns (uint256) {
         uint256 totalSupply = self.stETH.totalSupply();
         uint256 approximatedAmount =
             totalSupply * PercentD16.unwrap(percentage) / PercentD16.unwrap(PercentsD16.fromBasisPoints(100_00));
@@ -361,6 +356,13 @@ library LidoUtils {
     }
 
     function performRebase(Context memory self, PercentD16 rebaseFactor, uint256 lastUnstETHIdToFinalize) internal {
+        {
+            uint256 lastRequestId = self.withdrawalQueue.getLastRequestId();
+            if (lastUnstETHIdToFinalize > lastRequestId) {
+                lastUnstETHIdToFinalize = lastRequestId;
+            }
+        }
+
         uint256 shareRateBefore = self.stETH.getPooledEthByShares(10 ** 27);
         uint256 targetShareRate = shareRateBefore * PercentD16.unwrap(rebaseFactor) / HUNDRED_PERCENT_D16;
         vm.startPrank(address(self.agent));
@@ -379,20 +381,27 @@ library LidoUtils {
 
         uint256 clBalance = _sweepBufferedEther(self);
 
-        (uint256 modulesFee, uint256 treasuryFee, uint256 feeBasePrecision) =
-            self.stakingRouter.getStakingFeeAggregateDistribution();
-
-        uint256 internalTotalEther = self.stETH.getTotalPooledEther() - self.stETH.getExternalEther();
-        uint256 newInternalTotalEther = internalTotalEther * PercentD16.unwrap(rebaseFactor) / HUNDRED_PERCENT_D16;
-
         uint256 newCLBalance;
-        if (newInternalTotalEther > internalTotalEther) {
-            uint256 rebaseAmount = newInternalTotalEther - internalTotalEther;
-            rebaseAmount = rebaseAmount * feeBasePrecision / (feeBasePrecision - modulesFee - treasuryFee);
-            newCLBalance = clBalance + rebaseAmount;
-        } else {
-            uint256 rebaseAmount = internalTotalEther - newInternalTotalEther;
-            newCLBalance = clBalance - rebaseAmount;
+        {
+            uint256 totalPooledEther = self.stETH.getTotalPooledEther();
+            uint256 internalEther = totalPooledEther - self.stETH.getExternalEther();
+            uint256 rebaseFactorValue = PercentD16.unwrap(rebaseFactor);
+
+            if (rebaseFactorValue > HUNDRED_PERCENT_D16) {
+                (uint256 modulesFee, uint256 treasuryFee, uint256 feeBasePrecision) =
+                    self.stakingRouter.getStakingFeeAggregateDistribution();
+
+                uint256 rebaseAmount = internalEther * (rebaseFactorValue - HUNDRED_PERCENT_D16) / HUNDRED_PERCENT_D16;
+                uint256 grossRewards = rebaseAmount * feeBasePrecision / (feeBasePrecision - modulesFee - treasuryFee);
+
+                newCLBalance = clBalance + grossRewards;
+            } else if (rebaseFactorValue < HUNDRED_PERCENT_D16) {
+                uint256 rebaseAmount = internalEther * (HUNDRED_PERCENT_D16 - rebaseFactorValue) / HUNDRED_PERCENT_D16;
+
+                newCLBalance = clBalance - rebaseAmount;
+            } else {
+                newCLBalance = clBalance;
+            }
         }
 
         _handleOracleReport(self, int256(newCLBalance) - int256(clBalance), lastUnstETHIdToFinalize, targetShareRate);
@@ -408,7 +417,10 @@ library LidoUtils {
             uint256 shareRateAfter = self.stETH.getPooledEthByShares(10 ** 27);
             rebaseRate = PercentsD16.fromFraction(shareRateAfter, shareRateBefore);
         }
-        vm.assertApproxEqAbs(rebaseRate.toUint256(), rebaseFactor.toUint256(), 1, "Rebase rate error is too high");
+        // NOTE: tolerance of 10^12 out of 10^18 (~0.0001 basis points)
+        vm.assertApproxEqAbs(
+            rebaseRate.toUint256(), rebaseFactor.toUint256(), 0.000001 ether, "Rebase rate error is too high"
+        );
     }
 
     function _sweepBufferedEther(Context memory self) internal returns (uint256 clBalance) {

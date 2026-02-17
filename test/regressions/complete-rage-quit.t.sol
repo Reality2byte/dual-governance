@@ -26,7 +26,9 @@ uint256 constant WITHDRAWALS_BATCH_SIZE = 128;
 uint256 constant MIN_LOCKABLE_AMOUNT = 1000 wei;
 
 uint256 constant MIN_REBASE_BP = 99_90;
-uint256 constant MAX_REBASE_BP = 100_25;
+// NOTE: MAX_REBASE_BP must stay below ~100_15 to avoid IncorrectCLBalanceIncrease in the oracle
+// sanity checker (annualBalanceIncreaseBPLimit=100_00, timeElapsed=1day, ~10% fee gross-up).
+uint256 constant MAX_REBASE_BP = 100_15;
 
 struct VetoersFile {
     address[] addresses;
@@ -50,7 +52,6 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
     mapping(address vetoer => uint256[] unStEthIds) private _lockedUnStEthIds;
     mapping(address vetoer => uint256[] unStEthIds) private _allVetoersUnstEthIds;
     mapping(address vetoer => uint256 totalClaimedETH) private _vetoersClaimedETH;
-    mapping(address vetoer => bool isUnique) private _uniqVetoersMap;
     Random.Context internal _random;
     uint256[] private _rebaseDeltaPercents;
 
@@ -93,7 +94,7 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
             return;
         }
 
-        // TODO: the below operation freeze the test passing at the LidoUtils._handleOracleReport()
+        // NOTICE: the below operation freeze the test passing at the LidoUtils._handleOracleReport()
         // method. Seems like bug in the forge, but need to be investigated properly. Keeping it commented
         // for now.
         // vm.pauseGasMetering();
@@ -213,17 +214,9 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
         uint256 totalVetoersCount = 0;
         address[][] memory preparedVetoerGroups = new address[][](originalVetoersCount);
 
-        uint256 uniqueVetoersCount = 0;
-
         for (uint256 i = 0; i < originalVetoersCount; ++i) {
             preparedVetoerGroups[i] = _prepareVetoer(_allVetoers[_lastVetoerIndex + i], _lastVetoerIndex + i);
             totalVetoersCount += preparedVetoerGroups[i].length;
-            for (uint256 j = 0; j < preparedVetoerGroups[i].length; ++j) {
-                if (!_uniqVetoersMap[preparedVetoerGroups[i][j]]) {
-                    _uniqVetoersMap[preparedVetoerGroups[i][j]] = true;
-                    uniqueVetoersCount++;
-                }
-            }
         }
 
         if (totalVetoersCount > originalVetoersCount) {
@@ -240,7 +233,7 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
             }
         }
 
-        vetoers = _arrayUniq(vetoers, uniqueVetoersCount);
+        vetoers = _arrayUniq(vetoers);
 
         _lastVetoerIndex = lastVetoerIndexForCurrentRound + 1;
     }
@@ -610,17 +603,13 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
         IWithdrawalQueue.WithdrawalRequestStatus[] memory withdrawalStatuses =
             _lido.withdrawalQueue.getWithdrawalStatus(allUnstEthIds);
 
-        uint256 uniqueOwnersCount = 0;
         address[] memory allOwners = new address[](allUnstEthIds.length);
         for (uint256 i = 0; i < allUnstEthIds.length; ++i) {
-            if (_allVetoersUnstEthIds[withdrawalStatuses[i].owner].length == 0) {
-                uniqueOwnersCount++;
-            }
             _allVetoersUnstEthIds[withdrawalStatuses[i].owner].push(allUnstEthIds[i]);
             allOwners[i] = withdrawalStatuses[i].owner;
         }
 
-        addrsData.addresses = _arrayUniq(allOwners, uniqueOwnersCount);
+        addrsData.addresses = _arrayUniq(allOwners);
     }
 
     function _findLastVetoerIndexForRQ(
@@ -666,28 +655,26 @@ contract CompleteRageQuitRegressionTest is DGRegressionTestSetup {
         return string.concat("./test/regressions/complete-rage-quit-files/", fileName);
     }
 
-    function _arrayUniq(
-        address[] memory arr,
-        uint256 uniqElementsCount
-    ) internal pure returns (address[] memory unique) {
+    function _arrayUniq(address[] memory arr) internal pure returns (address[] memory unique) {
         if (arr.length < 2) {
             return arr;
         }
-        assertLe(uniqElementsCount, arr.length);
 
-        unique = new address[](uniqElementsCount);
-        uint256 lastUniqueIndex = 0;
+        unique = new address[](arr.length);
+        uint256 uniqueCount = 0;
         for (uint256 i = 0; i < arr.length; ++i) {
             bool found = false;
-            for (uint256 k = 0; k < lastUniqueIndex && !found; ++k) {
+            for (uint256 k = 0; k < uniqueCount && !found; ++k) {
                 if (unique[k] == arr[i]) {
                     found = true;
                 }
             }
             if (!found) {
-                unique[lastUniqueIndex] = arr[i];
-                lastUniqueIndex++;
+                unique[uniqueCount++] = arr[i];
             }
+        }
+        assembly {
+            mstore(unique, uniqueCount)
         }
     }
 

@@ -117,7 +117,7 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         uint256 expectedShareRate = shareRateBefore * rebasePercent.toUint256() / HUNDRED_PERCENT_D16;
 
-        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 1 gwei);
+        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 2 wei);
         assertEq(
             address(_lido.withdrawalQueue).balance, withdrawalQueueBalanceBefore + requestToFinalizeClaimableAmount
         );
@@ -152,7 +152,7 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         uint256 expectedShareRate = shareRateBefore * rebasePercent.toUint256() / HUNDRED_PERCENT_D16;
 
-        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 100 gwei);
+        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 2 wei);
         assertEq(
             address(_lido.withdrawalQueue).balance, withdrawalQueueBalanceBefore + requestToFinalizeClaimableAmount
         );

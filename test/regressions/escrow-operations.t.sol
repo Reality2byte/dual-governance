@@ -360,7 +360,6 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
                 2 * ACCURACY
             );
 
-            // TODO: temporarily using assertApproxEqAbs. Need to fix it properly in a separate PR
             assertApproxEqAbs(
                 escrow.getRageQuitSupport().toUint256(),
                 PercentsD16.fromFraction({
@@ -369,8 +368,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
                             .getPooledEthByShares(wstETHAmount + _initialLockedShares + _initialLockedUnStETHShares),
                         denominator: _lido.stETH.totalSupply()
                     }).toUint256(),
-                // TODO: temporarily increased delta to 10 * ACCURACY to fix possible rounding error. Need to fix it properly in a separate PR.
-                10 * ACCURACY
+                2 wei
             );
         }
 
@@ -393,27 +391,19 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
             );
 
             assertApproxEqAbs(
-                escrow.getSignallingEscrowDetails().totalUnstETHUnfinalizedShares.toUint256(),
-                unfinalizedShares,
-                // TODO: temporarily increased delta to 1 gwei to fix OutOfFunds error. Need to fix it properly in a separate PR.
-                1 gwei
+                escrow.getSignallingEscrowDetails().totalUnstETHUnfinalizedShares.toUint256(), unfinalizedShares, 2 wei
             );
 
             assertApproxEqAbs(
-                // TODO: temporarily increased delta to 1 gwei to fix OutOfFunds error. Need to fix it properly in a separate PR.
-                escrow.getSignallingEscrowDetails().totalUnstETHFinalizedETH.toUint256(),
-                ethAmountFinalized,
-                1 gwei
+                escrow.getSignallingEscrowDetails().totalUnstETHFinalizedETH.toUint256(), ethAmountFinalized, 2 wei
             );
 
-            // TODO: temporarily using assertApproxEqAbs. Need to fix it properly in a separate PR
             assertApproxEqAbs(
                 escrow.getRageQuitSupport().toUint256(),
                 PercentsD16.fromFraction({
                         numerator: supportAmount, denominator: _lido.stETH.totalSupply() + ethAmountFinalized
                     }).toUint256(),
-                // TODO: temporarily increased delta to 15 * ACCURACY to fix possible rounding error. Need to fix it properly in a separate PR.
-                15 * ACCURACY
+                2 wei
             );
         }
     }
