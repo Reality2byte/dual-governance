@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
+/* solhint-disable no-console */
+
 import {Vm} from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -105,6 +108,7 @@ bytes32 constant BUFFERED_ETHER_AND_DEPOSITED_VALIDATORS_SLOT =
 
 library LidoUtils {
     using DecimalsFormatting for uint256;
+    using DecimalsFormatting for PercentD16;
     using CallsScriptBuilder for CallsScriptBuilder.Context;
     using Uint256ArrayBuilder for Uint256ArrayBuilder.Context;
 
@@ -417,10 +421,20 @@ library LidoUtils {
             uint256 shareRateAfter = self.stETH.getPooledEthByShares(10 ** 27);
             rebaseRate = PercentsD16.fromFraction(shareRateAfter, shareRateBefore);
         }
-        // NOTE: tolerance of 10^12 out of 10^18 (~0.0001 basis points)
-        vm.assertApproxEqAbs(
-            rebaseRate.toUint256(), rebaseFactor.toUint256(), 0.000001 ether, "Rebase rate error is too high"
-        );
+        // NOTE: tolerance of 10^12 out of 10^18 (~0.0001 basis points) accounts for integer rounding
+        // in the fee gross-up calculation. Observed delta ~256 gwei on mainnet fork.
+        uint256 actual = rebaseRate.toUint256();
+        uint256 expected = rebaseFactor.toUint256();
+        uint256 delta = actual > expected ? actual - expected : expected - actual;
+        if (delta > 100 wei) {
+            console.log(
+                "WARNING: rebase rate deviation: actual %s, expected %s, diff %s",
+                rebaseRate.format(),
+                rebaseFactor.format(),
+                PercentsD16.from(delta).format()
+            );
+        }
+        vm.assertApproxEqAbs(actual, expected, 0.000001 ether, "Rebase rate error is too high");
     }
 
     function _sweepBufferedEther(Context memory self) internal returns (uint256 clBalance) {
