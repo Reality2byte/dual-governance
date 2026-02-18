@@ -427,14 +427,36 @@ library LidoUtils {
         uint256 expected = rebaseFactor.toUint256();
         uint256 delta = actual > expected ? actual - expected : expected - actual;
         if (delta > 100 wei) {
-            console.log(
-                "WARNING: rebase rate deviation: actual %s, expected %s, diff %s",
-                rebaseRate.format(),
-                rebaseFactor.format(),
-                PercentsD16.from(delta).format()
-            );
+            _logRebaseDeviation(self, rebaseRate, rebaseFactor, delta);
         }
-        vm.assertApproxEqAbs(actual, expected, 0.000001 ether, "Rebase rate error is too high");
+        vm.assertApproxEqAbs(actual, expected, 1_000 gwei, "Rebase rate error is too high");
+    }
+
+    function _logRebaseDeviation(
+        Context memory self,
+        PercentD16 rebaseRate,
+        PercentD16 rebaseFactor,
+        uint256 delta
+    ) internal view {
+        console.log(
+            "WARNING: rebase rate deviation: actual %s, expected %s, diff %s",
+            rebaseRate.format(),
+            rebaseFactor.format(),
+            PercentsD16.from(delta).format()
+        );
+        uint256 externalEther = self.stETH.getExternalEther();
+        uint256 totalPooledEther = self.stETH.getTotalPooledEther();
+        console.log(
+            "  externalEther: %s, internalEther: %s",
+            externalEther.formatEther(),
+            (totalPooledEther - externalEther).formatEther()
+        );
+        console.log(
+            "  totalPooledEther: %s, totalShares: %s, externalShares: %s",
+            totalPooledEther.formatEther(),
+            self.stETH.getTotalShares().formatEther(),
+            self.stETH.getSharesByPooledEth(externalEther).formatEther()
+        );
     }
 
     function _sweepBufferedEther(Context memory self) internal returns (uint256 clBalance) {

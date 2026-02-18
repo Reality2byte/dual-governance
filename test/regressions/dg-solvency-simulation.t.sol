@@ -23,6 +23,8 @@ import {UnstETHRecordStatus} from "contracts/libraries/AssetsAccounting.sol";
 
 import {Uint256ArrayBuilder} from "test/utils/uint256-array-builder.sol";
 
+uint256 constant ACCURACY = 2 wei;
+
 enum SimulationActionType {
     SubmitStETH,
     SubmitWstETH,
@@ -419,13 +421,13 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
                     address(rageQuitEscrow).balance,
                     _accidentalETHTransfersByEscrow[address(rageQuitEscrow)]
                         + _lido.stETH.getPooledEthByShares(_initialVetoSignallingEscrowLockedShares),
-                    0.00001 ether
+                    10_000 gwei
                 );
             } else {
                 assertApproxEqAbs(
                     address(rageQuitEscrow).balance,
                     _accidentalETHTransfersByEscrow[address(rageQuitEscrow)],
-                    0.00001 ether
+                    10_000 gwei
                 );
             }
 
@@ -718,7 +720,7 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
                     for (uint256 j = 0; j < wrClaimableEth.length; ++j) {
                         totalClaimableEth += wrClaimableEth[j];
                     }
-                    assertApproxEqAbs(address(rageQuitEscrow).balance, escrowEthBalance + totalClaimableEth, 2);
+                    assertApproxEqAbs(address(rageQuitEscrow).balance, escrowEthBalance + totalClaimableEth, ACCURACY);
                 }
             }
         }
@@ -1028,7 +1030,7 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             _totalSubmittedStETH += submitAmount;
             _accountsDetails[account].stETHSubmitted += submitAmount;
 
-            assertApproxEqAbs(_lido.stETH.balanceOf(account), stEthBalanceBefore + submitAmount, 2 wei);
+            assertApproxEqAbs(_lido.stETH.balanceOf(account), stEthBalanceBefore + submitAmount, ACCURACY);
             assertEq(account.balance, balance - submitAmount);
 
             _debug.debug("Account %s submitted %s stETH.", account, submitAmount.formatEther(), balance.formatEther());
@@ -1065,8 +1067,8 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             _totalSubmittedWstETH += wstEthMinted;
             _accountsDetails[account].wstETHSubmitted += wstEthMinted;
 
-            assertApproxEqAbs(_lido.stETH.balanceOf(account), stEthBalance, 2 wei);
-            assertApproxEqAbs(_lido.wstETH.balanceOf(account), wstEthBalance + wstEthMinted, 2 wei);
+            assertApproxEqAbs(_lido.stETH.balanceOf(account), stEthBalance, ACCURACY);
+            assertApproxEqAbs(_lido.wstETH.balanceOf(account), wstEthBalance + wstEthMinted, ACCURACY);
             assertEq(account.balance, balance - submitAmount);
 
             _debug.debug("Account %s submitted %s wstETH.", account, wstEthMinted.formatEther(), balance.formatEther());

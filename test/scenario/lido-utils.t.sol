@@ -8,6 +8,8 @@ import {DecimalsFormatting} from "test/utils/formatting.sol";
 import {IOracleReportSanityChecker} from "test/utils/interfaces/IOracleReportSanityChecker.sol";
 import {Durations} from "contracts/types/Duration.sol";
 
+uint256 constant ACCURACY = 2 wei;
+
 contract LidoUtilsTest is DGScenarioTestSetup {
     using LidoUtils for LidoUtils.Context;
     using DecimalsFormatting for uint256;
@@ -117,7 +119,7 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         uint256 expectedShareRate = shareRateBefore * rebasePercent.toUint256() / HUNDRED_PERCENT_D16;
 
-        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 2 wei);
+        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, ACCURACY);
         assertEq(
             address(_lido.withdrawalQueue).balance, withdrawalQueueBalanceBefore + requestToFinalizeClaimableAmount
         );
@@ -152,7 +154,7 @@ contract LidoUtilsTest is DGScenarioTestSetup {
 
         uint256 expectedShareRate = shareRateBefore * rebasePercent.toUint256() / HUNDRED_PERCENT_D16;
 
-        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, 2 wei);
+        assertApproxEqAbs(_lido.stETH.getPooledEthByShares(1 ether), expectedShareRate, ACCURACY);
         assertEq(
             address(_lido.withdrawalQueue).balance, withdrawalQueueBalanceBefore + requestToFinalizeClaimableAmount
         );
