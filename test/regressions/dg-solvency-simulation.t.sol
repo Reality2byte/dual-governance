@@ -295,8 +295,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             return "Normal";
         } else if (dgState == DGState.VetoSignalling) {
             return "VetoSignalling";
-        } else if (dgState == DGState.VetoSignalling) {
-            return "VetoSignalling";
         } else if (dgState == DGState.VetoSignallingDeactivation) {
             return "VetoSignallingDeactivation";
         } else if (dgState == DGState.VetoCooldown) {
@@ -608,8 +606,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
         _debug.debug(">>> Force processing rage quit escrow withdrawals for %s", address(rageQuitEscrow));
         _activateNextStateIfNeeded();
 
-        Escrow.RageQuitEscrowDetails memory details = rageQuitEscrow.getRageQuitEscrowDetails();
-
         while (!rageQuitEscrow.isWithdrawalsBatchesClosed()) {
             uint256 lastUnstETHIdBefore = _lido.withdrawalQueue.getLastRequestId();
             rageQuitEscrow.requestNextWithdrawalsBatch(128);
@@ -631,7 +627,7 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             rageQuitEscrow.claimNextWithdrawalsBatch(128);
         }
 
-        details = rageQuitEscrow.getRageQuitEscrowDetails();
+        Escrow.RageQuitEscrowDetails memory details = rageQuitEscrow.getRageQuitEscrowDetails();
         if (!details.isRageQuitExtensionPeriodStarted) {
             rageQuitEscrow.startRageQuitExtensionPeriod();
         }
@@ -755,7 +751,10 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
 
                 (uint256 unstETHCountClaimed,) = _claimEscrowUnstETH(rageQuitEscrow, account, lockedUnstETHIds);
 
-                if (claimerCount > 0 && unstETHCountClaimed > 0) {
+                if (unstETHCountClaimed == 0) {
+                    continue;
+                }
+                if (claimerCount > 0) {
                     claimerCount--;
                 } else {
                     break;
@@ -1162,14 +1161,14 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
                 _random.nextUint256(MIN_ST_ETH_WITHDRAW_AMOUNT, Math.min(balance, MAX_ST_ETH_WITHDRAW_AMOUNT));
             uint256 batchSize = withdrawAmount / WITHDRAWAL_QUEUE_REQUEST_MAX_AMOUNT;
             uint256 lastRequestAmount = withdrawAmount % WITHDRAWAL_QUEUE_REQUEST_MAX_AMOUNT;
-            if (lastRequestAmount > MIN_ST_ETH_WITHDRAW_AMOUNT) {
+            if (lastRequestAmount >= MIN_ST_ETH_WITHDRAW_AMOUNT) {
                 batchSize += 1;
             }
 
             uint256[] memory withdrawalAmounts = new uint256[](batchSize);
 
             for (uint256 j = 0; j < batchSize; ++j) {
-                if (j == batchSize - 1 && lastRequestAmount > MIN_ST_ETH_WITHDRAW_AMOUNT) {
+                if (j == batchSize - 1 && lastRequestAmount >= MIN_ST_ETH_WITHDRAW_AMOUNT) {
                     withdrawalAmounts[j] = lastRequestAmount;
                 } else {
                     withdrawalAmounts[j] = WITHDRAWAL_QUEUE_REQUEST_MAX_AMOUNT;
@@ -1220,14 +1219,14 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
                 _random.nextUint256(MIN_WST_ETH_WITHDRAW_AMOUNT, Math.min(balance, wstETHRequestMaxAmount));
             uint256 batchSize = withdrawAmount / wstETHRequestMaxAmount;
             uint256 lastRequestAmount = withdrawAmount % wstETHRequestMaxAmount;
-            if (lastRequestAmount > MIN_WST_ETH_WITHDRAW_AMOUNT) {
+            if (lastRequestAmount >= MIN_WST_ETH_WITHDRAW_AMOUNT) {
                 batchSize += 1;
             }
 
             uint256[] memory withdrawalAmounts = new uint256[](batchSize);
 
             for (uint256 j = 0; j < batchSize; ++j) {
-                if (j == batchSize - 1 && lastRequestAmount > MIN_WST_ETH_WITHDRAW_AMOUNT) {
+                if (j == batchSize - 1 && lastRequestAmount >= MIN_WST_ETH_WITHDRAW_AMOUNT) {
                     withdrawalAmounts[j] = lastRequestAmount;
                 } else {
                     withdrawalAmounts[j] = wstETHRequestMaxAmount;
@@ -1285,6 +1284,7 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             _accountsDetails[account].sharesLockedInEscrow[
                 _getCurrentEscrowAddress()
             ] += _lido.stETH.getSharesByPooledEth(lockAmount);
+            _accountsDetails[account].accumulatedEscrowSharesErrors[_getCurrentEscrowAddress()]++;
 
             _debug.debug("Account %s locked %s stETH in signalling escrow", account, lockAmount.formatEther());
             return lockAmount;
@@ -1663,11 +1663,11 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             ) {
                 continue;
             }
-            uint256 randomUnstETHIdsCountToWithdraw = _random.nextUint256(1, details.unstETHIdsCount);
             uint256[] memory lockedUnstETHIds = escrow.getVetoerUnstETHIds(account);
+            uint256 randomUnstETHIdsCountToWithdraw = _random.nextUint256(1, lockedUnstETHIds.length);
             IWithdrawalQueue.WithdrawalRequestStatus[] memory statuses =
                 _lido.withdrawalQueue.getWithdrawalStatus(lockedUnstETHIds);
-            uint256[] memory randomIndices = _random.nextPermutation(randomUnstETHIdsCountToWithdraw);
+            uint256[] memory randomIndices = _random.nextPermutation(lockedUnstETHIds.length);
 
             Uint256ArrayBuilder.Context memory unstETHIdsBuilder =
                 Uint256ArrayBuilder.create(randomUnstETHIdsCountToWithdraw);
