@@ -523,6 +523,9 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
 
                 ethLockedUnclaimed += unstETHUnclaimed;
                 sharesLockedInEscrows += sharesLocked;
+
+                // Completeness: local tracking must match escrow state after full withdrawal
+                _checkUnstETHIdsConsistency(_rageQuitEscrows[j], account);
             }
 
             assertEq(ethLockedUnclaimed, 0);
@@ -565,6 +568,9 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
                 ethLockedUnclaimed += unstETHUnclaimed;
                 sharesLockedInEscrows += sharesLocked;
             }
+
+            // Cross-check: local unstETH ID tracking must match escrow state
+            _checkUnstETHIdsConsistency(_vetoSignallingEscrow, account);
             {
                 uint256 holderBalanceBefore = _accountsDetails[account].ethBalanceBefore
                     + _accountsDetails[account].stETHBalanceBefore + _accountsDetails[account].unstETHBalanceBefore;
@@ -1001,6 +1007,57 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             if (unstETHDetails[i].status != UnstETHRecordStatus.Withdrawn) {
                 unstETHUnclaimed += withdrawalStatuses[i].amountOfStETH;
             }
+        }
+    }
+
+    /// @dev Remove specific unstETH IDs from per-account local tracking (swap-and-pop)
+    function _removeUnstETHIdsFromTracking(address account, address escrow, uint256[] memory idsToRemove) internal {
+        uint256[] storage tracked = _accountsDetails[account].unstETHIdsLockedInEscrow[escrow];
+        for (uint256 i = 0; i < idsToRemove.length; ++i) {
+            for (uint256 j = 0; j < tracked.length; ++j) {
+                if (tracked[j] == idsToRemove[i]) {
+                    tracked[j] = tracked[tracked.length - 1];
+                    tracked.pop();
+                    break;
+                }
+            }
+        }
+    }
+
+    /// @dev Cross-check: local unstETHIdsLockedInEscrow must match escrow.getVetoerUnstETHIds
+    function _checkUnstETHIdsConsistency(Escrow escrow, address account) internal view {
+        uint256[] memory trackedIds = _accountsDetails[account].unstETHIdsLockedInEscrow[address(escrow)];
+        uint256[] memory escrowIds = escrow.getVetoerUnstETHIds(account);
+
+        assertEq(
+            trackedIds.length,
+            escrowIds.length,
+            string.concat(
+                "unstETH IDs count mismatch for account ",
+                Strings.toHexString(account),
+                " in escrow ",
+                Strings.toHexString(address(escrow))
+            )
+        );
+
+        // Both sets should contain the same IDs (order may differ)
+        for (uint256 i = 0; i < escrowIds.length; ++i) {
+            bool found = false;
+            for (uint256 j = 0; j < trackedIds.length; ++j) {
+                if (trackedIds[j] == escrowIds[i]) {
+                    found = true;
+                    break;
+                }
+            }
+            assertTrue(
+                found,
+                string.concat(
+                    "unstETH ID ",
+                    Strings.toString(escrowIds[i]),
+                    " in escrow but not in local tracking for ",
+                    Strings.toHexString(account)
+                )
+            );
         }
     }
 
@@ -1626,11 +1683,12 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
                 continue;
             }
 
-            _unlockUnstETH(account, unstETHIdsBuilder.getSorted());
-            unstETHCount += details.unstETHIdsCount;
-            unstETHAmount += unstETHAmount;
+            uint256[] memory unlockedIds = unstETHIdsBuilder.getSorted();
+            _unlockUnstETH(account, unlockedIds);
+            _removeUnstETHIdsFromTracking(account, address(escrow), unlockedIds);
+            unstETHCount += unstETHIdsBuilder.size;
 
-            _debug.debug("Account %s unlocked %d unstETH from signalling escrow", account, details.unstETHIdsCount);
+            _debug.debug("Account %s unlocked %d unstETH from signalling escrow", account, unstETHIdsBuilder.size);
 
             return (unstETHCount, unstETHAmount);
         }
@@ -1752,6 +1810,7 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             _totalAccidentalUnstETHTransferAmount += requestAmounts[0];
             _accountsDetails[account].accidentalUnstETHTransferAmount += requestAmounts[0];
 
+            _accidentalUnstETHTransfersByEscrow[escrow] += requestAmounts[0];
             _debug.debug(
                 "Account %s transferred %s unstETH to escrow %s",
                 account,
