@@ -1809,8 +1809,8 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
 
             _totalAccidentalUnstETHTransferAmount += requestAmounts[0];
             _accountsDetails[account].accidentalUnstETHTransferAmount += requestAmounts[0];
-
             _accidentalUnstETHTransfersByEscrow[escrow] += requestAmounts[0];
+
             _debug.debug(
                 "Account %s transferred %s unstETH to escrow %s",
                 account,
@@ -2113,13 +2113,23 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
     function _loadHolders() internal {
         _stETHRealHolders = _loadHoldersFromFile("./test/regressions/complete-rage-quit-files/steth_vetoers.json");
         _wstETHRealHolders = _loadHoldersFromFile("./test/regressions/complete-rage-quit-files/wsteth_vetoers.json");
+
         for (uint256 i = 0; i < _stETHRealHolders.length; ++i) {
             _allRealHolders.push(_stETHRealHolders[i]);
             _allAccounts.push(_stETHRealHolders[i]);
         }
         for (uint256 i = 0; i < _wstETHRealHolders.length; ++i) {
-            _allRealHolders.push(_wstETHRealHolders[i]);
-            _allAccounts.push(_wstETHRealHolders[i]);
+            bool isDuplicate = false;
+            for (uint256 j = 0; j < _stETHRealHolders.length; ++j) {
+                if (_wstETHRealHolders[i] == _stETHRealHolders[j]) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            if (!isDuplicate) {
+                _allRealHolders.push(_wstETHRealHolders[i]);
+                _allAccounts.push(_wstETHRealHolders[i]);
+            }
         }
 
         console.log(
