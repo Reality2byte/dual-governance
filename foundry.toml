@@ -28,6 +28,9 @@ test = 'test/kontrol'
 line_length = 120
 multiline_func_header = 'params_first_multi'
 
+[profile.lint]
+exclude_lints = ["mixed-case-function", "mixed-case-variable"]
+
 [etherscan]
 mainnet = { key = "${ETHERSCAN_API_KEY}" }
 holesky = { key = "${ETHERSCAN_API_KEY}", chain = "17000" }
