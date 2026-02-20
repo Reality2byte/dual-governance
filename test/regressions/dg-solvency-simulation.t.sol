@@ -15,7 +15,6 @@ import {Timestamp, Timestamps} from "contracts/types/Timestamp.sol";
 import {SharesValue} from "contracts/types/SharesValue.sol";
 import {PercentsD16, PercentD16, HUNDRED_PERCENT_D16} from "contracts/types/PercentD16.sol";
 import {IWithdrawalQueue} from "test/utils/interfaces/IWithdrawalQueue.sol";
-import {IRageQuitEscrow} from "contracts/interfaces/IRageQuitEscrow.sol";
 import {Escrow} from "contracts/Escrow.sol";
 
 import {DecimalsFormatting} from "test/utils/formatting.sol";
@@ -194,9 +193,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
     uint256 internal _negativeRebaseAccumulated = HUNDRED_PERCENT_D16;
     uint256 internal _positiveRebaseAccumulated = HUNDRED_PERCENT_D16;
 
-    uint256 internal _totalLockedStETH = 0;
-    uint256 internal _totalLockedWstETH = 0;
-
     uint256 internal _totalLockedStETHByRealAccounts = 0;
     uint256 internal _totalLockedStETHBySimulationAccounts = 0;
 
@@ -213,24 +209,16 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
     uint256 internal _totalUnlockedUnstETHByRealAccountsCount = 0;
     uint256 internal _totalUnlockedUnstETHByRealAccountsAmount = 0;
 
-    uint256 internal _totalClaimedUnstETHByRealAccountsCount = 0;
-    uint256 internal _totalClaimedUnstETHBySimulationAccountsCount = 0;
     uint256 internal _totalClaimedUnstETHByRealAccountsAmount = 0;
     uint256 internal _totalClaimedUnstETHBySimulationAccountsAmount = 0;
 
-    uint256 internal _totalMarkedUnstETHFinalizedCount = 0;
     uint256 internal _totalMarkedUnstETHFinalizedAmount = 0;
 
-    uint256 internal _totalLockedUnstETHByRealAccountsCount = 0;
-    uint256 internal _totalLockedUnstETHBySimulationAccountsCount = 0;
     uint256 internal _totalLockedUnstETHByRealAccountsAmount = 0;
     uint256 internal _totalLockedUnstETHBySimulationAccountsAmount = 0;
 
     uint256 internal _totalSubmittedStETH = 0;
     uint256 internal _totalSubmittedWstETH = 0;
-
-    uint256 internal _totalWithdrawnStETH = 0;
-    uint256 internal _totalWithdrawnWstETH = 0;
 
     uint256 internal _totalWithdrawnStETHByRealAccounts = 0;
     uint256 internal _totalWithdrawnStETHBySimulationAccounts = 0;
@@ -267,8 +255,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
     mapping(SimulationActionType actionType => uint256 emittedCount) internal _actionsCounters;
 
     uint256 internal _lastOracleReportTimestamp;
-    uint256 internal _lastWithdrawalsFinalizationTimestamp;
-    uint256 internal _nextFrameStart;
 
     Debug.Context internal _debug;
 
@@ -285,8 +271,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
 
         _loadOrDeployDGSetup();
         _random = Random.create(block.timestamp);
-        _nextFrameStart = _lido.getReportTimeElapsed().nextFrameStart;
-
         _setupAccounts();
     }
 
@@ -1183,8 +1167,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             for (uint256 j = 0; j < requestIds.length; ++j) {
                 _accountsDetails[account].unstETHIdsRequested.push(requestIds[j]);
             }
-            _totalWithdrawnStETH += requestedAmount;
-
             _debug.debug("Account %s withdrawn %s stETH.", account, requestedAmount.formatEther());
             _debug.debug("Request ids: %s-%s", requestIds[0], requestIds[requestIds.length - 1]);
 
@@ -1245,7 +1227,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
                 _accountsDetails[account].unstETHIdsRequested.push(requestIds[j]);
             }
 
-            _totalWithdrawnWstETH += requestedAmount;
             _debug.debug("Account %s withdrawn %s wstETH.", account, requestedAmount.formatEther());
             _debug.debug("Request ids: %s-%s", requestIds[0], requestIds[requestIds.length - 1]);
 
@@ -1279,7 +1260,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             lockAmount = _random.nextUint256(MIN_ST_ETH_LOCK_AMOUNT, Math.min(balance, MAX_ST_ETH_LOCK_AMOUNT));
 
             _lockStETH(account, lockAmount);
-            _totalLockedStETH += lockAmount;
 
             _accountsDetails[account].sharesLockedInEscrow[
                 _getCurrentEscrowAddress()
@@ -1317,7 +1297,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             lockAmount = _random.nextUint256(MIN_WST_ETH_LOCK_AMOUNT, Math.min(balance, MAX_WST_ETH_LOCK_AMOUNT));
 
             _lockWstETH(account, lockAmount);
-            _totalLockedWstETH += lockAmount;
 
             _accountsDetails[account].sharesLockedInEscrow[_getCurrentEscrowAddress()] += lockAmount;
             _accountsDetails[account].accumulatedEscrowSharesErrors[_getCurrentEscrowAddress()]++;
@@ -1334,16 +1313,14 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
 
     function _lockUnstETHByRandomSimulationAccount() internal {
         _debug.debug(">>> Locking unstETH by simulation account");
-        (uint256 unstETHAmount, uint256 unstETHCount) = _lockUnstETHByRandomAccount(_simulationAccounts);
+        (uint256 unstETHAmount,) = _lockUnstETHByRandomAccount(_simulationAccounts);
         _totalLockedUnstETHBySimulationAccountsAmount += unstETHAmount;
-        _totalLockedUnstETHBySimulationAccountsCount += unstETHCount;
     }
 
     function _lockUnstETHByRandomRealAccount() internal {
         _debug.debug(">>> Locking unstETH by real account");
-        (uint256 unstETHAmount, uint256 unstETHCount) = _lockUnstETHByRandomAccount(_allRealHolders);
+        (uint256 unstETHAmount,) = _lockUnstETHByRandomAccount(_allRealHolders);
         _totalLockedUnstETHByRealAccountsAmount += unstETHAmount;
-        _totalLockedUnstETHByRealAccountsCount += unstETHCount;
     }
 
     function _lockUnstETHByRandomAccount(address[] memory accounts)
@@ -1417,13 +1394,11 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
     function _claimUnstETHByRandomSimulationAccount() internal {
         _debug.debug(">>> Claiming unstETH by simulation account");
         _totalClaimedUnstETHBySimulationAccountsAmount += _claimUnstETHByRandomAccount(_simulationAccounts);
-        _totalClaimedUnstETHBySimulationAccountsCount++;
     }
 
     function _claimUnstETHByRandomRealAccount() internal {
         _debug.debug(">>> Claiming unstETH by real account");
         _totalClaimedUnstETHByRealAccountsAmount += _claimUnstETHByRandomAccount(_allRealHolders);
-        _totalClaimedUnstETHByRealAccountsCount++;
     }
 
     function _claimUnstETHByRandomAccount(address[] memory accounts) internal returns (uint256 totalClaimedAmount) {
@@ -1522,8 +1497,6 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
         uint256[] memory requestIdsToFinalize = requestsArrayBuilder.getSorted();
         uint256[] memory hints = _lido.withdrawalQueue
             .findCheckpointHints(requestIdsToFinalize, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
-
-        _totalMarkedUnstETHFinalizedCount += requestIdsToFinalize.length;
 
         _getVetoSignallingEscrow().markUnstETHFinalized(requestIdsToFinalize, hints);
 
