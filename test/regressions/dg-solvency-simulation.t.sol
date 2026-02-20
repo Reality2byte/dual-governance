@@ -625,12 +625,15 @@ contract EscrowSolvencyTest is DGRegressionTestSetup {
             rageQuitEscrow.claimNextWithdrawalsBatch(128);
         }
 
-        rageQuitEscrow.startRageQuitExtensionPeriod();
+        details = rageQuitEscrow.getRageQuitEscrowDetails();
+        if (!details.isRageQuitExtensionPeriodStarted) {
+            rageQuitEscrow.startRageQuitExtensionPeriod();
+        }
 
+        details = rageQuitEscrow.getRageQuitEscrowDetails();
         vm.warp(
-            block.timestamp + details.rageQuitExtensionPeriodStartedAt.toSeconds()
-                + details.rageQuitExtensionPeriodDuration.toSeconds() + details.rageQuitEthWithdrawalsDelay.toSeconds()
-                + 1
+            details.rageQuitExtensionPeriodStartedAt.toSeconds() + details.rageQuitExtensionPeriodDuration.toSeconds()
+                + details.rageQuitEthWithdrawalsDelay.toSeconds() + 1
         );
 
         for (uint256 j = 0; j < _allAccounts.length; ++j) {
