@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+/* solhint-disable no-console */
 pragma solidity 0.8.26;
 
 import {PercentsD16} from "contracts/types/PercentD16.sol";
@@ -13,6 +14,8 @@ import {State as DualGovernanceState} from "contracts/interfaces/IDualGovernance
 
 import {MAINNET_DISCONNECTED_DUAL_GOVERNANCE} from "../utils/lido-utils.sol";
 import {LidoUtils, DGRegressionTestSetup, MAINNET_CHAIN_ID} from "../utils/integration-tests.sol";
+
+import {console} from "forge-std/console.sol";
 
 uint256 constant ACCURACY = 2 wei;
 uint256 constant MAX_WITHDRAWAL_REQUEST_AMOUNT = 1_000 ether;
@@ -111,7 +114,9 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
         _step("2. Checking that rage quit support is > 50% and does not affect DG state");
         {
             dualGovernance.activateNextState();
+            console.log("Rage quit support:", escrow.getRageQuitSupport().toUint256());
             assert(escrow.getRageQuitSupport() >= PercentsD16.fromBasisPoints(50_00));
+            console.log("Effective state:", uint256(dualGovernance.getEffectiveState()));
             assert(dualGovernance.getEffectiveState() == DualGovernanceState.Normal);
         }
     }
