@@ -17,7 +17,6 @@ import {
     TiebreakerDeployedContracts,
     DEFAULT_ROOT_KEY as TIEBREAKER_ROOT_KEY
 } from "scripts/utils/deployment/Tiebreaker.sol";
-import {DeployVerification} from "scripts/utils/DeployVerification.sol";
 import {DeployFiles} from "scripts/utils/DeployFiles.sol";
 
 contract DeployTiebreaker is Script {

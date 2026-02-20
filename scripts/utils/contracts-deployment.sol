@@ -8,8 +8,8 @@ import {console} from "forge-std/console.sol";
 import {ITimelock} from "contracts/interfaces/ITimelock.sol";
 import {ISignallingEscrow} from "contracts/interfaces/ISignallingEscrow.sol";
 
-import {Duration, Durations} from "contracts/types/Duration.sol";
-import {Timestamp, Timestamps} from "contracts/types/Timestamp.sol";
+import {Durations} from "contracts/types/Duration.sol";
+import {Timestamps} from "contracts/types/Timestamp.sol";
 
 import {Escrow} from "contracts/Escrow.sol";
 import {Executor} from "contracts/Executor.sol";
@@ -133,10 +133,9 @@ library ContractsDeployment {
         return new ResealManager(timelock);
     }
 
-    function deployDualGovernanceConfigProvider(DualGovernanceConfig.Context memory dgConfig)
-        internal
-        returns (ImmutableDualGovernanceConfigProvider)
-    {
+    function deployDualGovernanceConfigProvider(
+        DualGovernanceConfig.Context memory dgConfig
+    ) internal returns (ImmutableDualGovernanceConfigProvider) {
         DualGovernanceConfig.validate(dgConfig);
         return new ImmutableDualGovernanceConfigProvider(dgConfig);
     }
@@ -157,9 +156,7 @@ library ContractsDeployment {
         TiebreakerDeployConfig.validate(tiebreakerConfig);
 
         deployedContracts.tiebreakerCoreCommittee = new TiebreakerCoreCommittee({
-            owner: deployer,
-            dualGovernance: tiebreakerConfig.dualGovernance,
-            timelock: tiebreakerConfig.executionDelay
+            owner: deployer, dualGovernance: tiebreakerConfig.dualGovernance, timelock: tiebreakerConfig.executionDelay
         });
 
         deployedContracts.tiebreakerSubCommittees =
@@ -184,9 +181,7 @@ library ContractsDeployment {
         address owner
     ) internal returns (TiebreakerCoreCommittee) {
         return new TiebreakerCoreCommittee({
-            owner: owner,
-            dualGovernance: tiebreakerConfig.dualGovernance,
-            timelock: tiebreakerConfig.executionDelay
+            owner: owner, dualGovernance: tiebreakerConfig.dualGovernance, timelock: tiebreakerConfig.executionDelay
         });
     }
 
@@ -272,8 +267,9 @@ library ContractsDeployment {
         TimelockContractDeployConfig.Context memory timelockConfig
     ) internal returns (TimelockedGovernance emergencyGovernance) {
         if (timelockConfig.emergencyGovernanceProposer != address(0)) {
-            emergencyGovernance =
-                deployTimelockedGovernance({governance: timelockConfig.emergencyGovernanceProposer, timelock: timelock});
+            emergencyGovernance = deployTimelockedGovernance({
+                governance: timelockConfig.emergencyGovernanceProposer, timelock: timelock
+            });
             adminExecutor.execute(
                 address(timelock), 0, abi.encodeCall(timelock.setEmergencyGovernance, (address(emergencyGovernance)))
             );

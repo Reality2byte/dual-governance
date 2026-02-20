@@ -3,26 +3,12 @@ pragma solidity 0.8.26;
 
 /* solhint-disable no-console */
 
-import {Vm} from "forge-std/Vm.sol";
 import {console} from "forge-std/console.sol";
 
-import {IStETH} from "contracts/interfaces/IStETH.sol";
-import {IWstETH} from "contracts/interfaces/IWstETH.sol";
-import {ITimelock} from "contracts/interfaces/ITimelock.sol";
-import {IWithdrawalQueue} from "contracts/interfaces/IWithdrawalQueue.sol";
-import {ISignallingEscrow} from "contracts/interfaces/ISignallingEscrow.sol";
-
-import {Escrow} from "contracts/Escrow.sol";
-import {Executor} from "contracts/Executor.sol";
-import {ResealManager} from "contracts/ResealManager.sol";
-import {DualGovernance} from "contracts/DualGovernance.sol";
-import {TimelockedGovernance} from "contracts/TimelockedGovernance.sol";
-import {DualGovernanceConfig} from "contracts/libraries/DualGovernanceConfig.sol";
 import {EmergencyProtectedTimelock} from "contracts/EmergencyProtectedTimelock.sol";
-import {ImmutableDualGovernanceConfigProvider} from "contracts/ImmutableDualGovernanceConfigProvider.sol";
 
-import {Duration, Durations} from "contracts/types/Duration.sol";
-import {Timestamp, Timestamps} from "contracts/types/Timestamp.sol";
+import {Duration} from "contracts/types/Duration.sol";
+import {Timestamp} from "contracts/types/Timestamp.sol";
 
 import {ConfigFileReader, ConfigFileBuilder, JsonKeys} from "../ConfigFiles.sol";
 
@@ -65,7 +51,9 @@ library TimelockContractDeployConfig {
                 maxAfterSubmitDelay: file.readDuration($sanityCheckParams.key("max_after_submit_delay")),
                 maxAfterScheduleDelay: file.readDuration($sanityCheckParams.key("max_after_schedule_delay")),
                 maxEmergencyModeDuration: file.readDuration($sanityCheckParams.key("max_emergency_mode_duration")),
-                maxEmergencyProtectionDuration: file.readDuration($sanityCheckParams.key("max_emergency_protection_duration"))
+                maxEmergencyProtectionDuration: file.readDuration(
+                    $sanityCheckParams.key("max_emergency_protection_duration")
+                )
             }),
             emergencyGovernanceProposer: file.readAddress($emergencyProtection.key("emergency_governance_proposer")),
             emergencyActivationCommittee: file.readAddress($emergencyProtection.key("emergency_activation_committee")),

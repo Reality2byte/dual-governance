@@ -38,14 +38,14 @@ contract EmergencyProtectedTimelockUnitTests is UnitTest {
     address private _dualGovernance = makeAddr("DUAL_GOVERNANCE");
     address private _adminExecutor;
 
-    EmergencyProtectedTimelock.SanityCheckParams private _defaultSanityCheckParams = EmergencyProtectedTimelock
-        .SanityCheckParams({
-        minExecutionDelay: Durations.from(4 days),
-        maxAfterSubmitDelay: Durations.from(14 days),
-        maxAfterScheduleDelay: Durations.from(7 days),
-        maxEmergencyModeDuration: Durations.from(365 days),
-        maxEmergencyProtectionDuration: Durations.from(365 days)
-    });
+    EmergencyProtectedTimelock.SanityCheckParams private _defaultSanityCheckParams =
+        EmergencyProtectedTimelock.SanityCheckParams({
+            minExecutionDelay: Durations.from(4 days),
+            maxAfterSubmitDelay: Durations.from(14 days),
+            maxAfterScheduleDelay: Durations.from(7 days),
+            maxEmergencyModeDuration: Durations.from(365 days),
+            maxEmergencyProtectionDuration: Durations.from(365 days)
+        });
     Duration private _defaultAfterSubmitDelay = Durations.from(3 days);
     Duration private _defaultAfterScheduleDelay = Durations.from(2 days);
 
@@ -128,8 +128,7 @@ contract EmergencyProtectedTimelockUnitTests is UnitTest {
 
         vm.expectRevert(abi.encodeWithSelector(TimelockState.InvalidAfterSubmitDelay.selector, afterSubmitDelay));
 
-        EmergencyProtectedTimelock timelock =
-            new EmergencyProtectedTimelock(sanityCheckParams, adminExecutor, afterSubmitDelay, afterScheduleDelay);
+        new EmergencyProtectedTimelock(sanityCheckParams, adminExecutor, afterSubmitDelay, afterScheduleDelay);
     }
 
     function test_constructor_RevertOn_AfterScheduleDelayExceeded() external {
@@ -141,8 +140,7 @@ contract EmergencyProtectedTimelockUnitTests is UnitTest {
 
         vm.expectRevert(abi.encodeWithSelector(TimelockState.InvalidAfterScheduleDelay.selector, afterScheduleDelay));
 
-        EmergencyProtectedTimelock timelock =
-            new EmergencyProtectedTimelock(sanityCheckParams, adminExecutor, afterSubmitDelay, afterScheduleDelay);
+        new EmergencyProtectedTimelock(sanityCheckParams, adminExecutor, afterSubmitDelay, afterScheduleDelay);
     }
 
     function test_constructor_RevertOn_MinExecutionDelayTooLow() external {
@@ -157,8 +155,7 @@ contract EmergencyProtectedTimelockUnitTests is UnitTest {
             abi.encodeWithSelector(TimelockState.InvalidExecutionDelay.selector, afterSubmitDelay + afterScheduleDelay)
         );
 
-        EmergencyProtectedTimelock timelock =
-            new EmergencyProtectedTimelock(sanityCheckParams, adminExecutor, afterSubmitDelay, afterScheduleDelay);
+        new EmergencyProtectedTimelock(sanityCheckParams, adminExecutor, afterSubmitDelay, afterScheduleDelay);
     }
 
     function testFuzz_constructor_HappyPath(
@@ -193,8 +190,6 @@ contract EmergencyProtectedTimelockUnitTests is UnitTest {
     }
 
     function test_submit_HappyPath() external {
-        string memory testMetadata = "testMetadata";
-
         vm.expectEmit();
         emit ExecutableProposals.ProposalSubmitted(
             1, _adminExecutor, _getMockTargetRegularStaffCalls(address(_targetMock))
@@ -1158,14 +1153,11 @@ contract EmergencyProtectedTimelockUnitTests is UnitTest {
 
         (ITimelock.ProposalDetails memory executedProposal, ExternalCall[] memory executedCalls) =
             _timelock.getProposal(1);
-        Timestamp executeTimestamp = Timestamps.now();
-
         assertEq(executedProposal.id, 1);
         assertEq(executedProposal.status, ProposalStatus.Executed);
         assertEq(executedProposal.executor, _adminExecutor);
         assertEq(executedProposal.submittedAt, submitTimestamp);
         assertEq(executedProposal.scheduledAt, scheduleTimestamp);
-        // assertEq(executedProposal.executedAt, executeTimestamp);
         // assertEq doesn't support comparing enumerables so far
         assertEq(executedCalls.length, 1);
         assertEq(executedCalls[0].value, executorCalls[0].value);

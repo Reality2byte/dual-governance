@@ -8,11 +8,7 @@ import {Vm} from "forge-std/Vm.sol";
 import {TiebreakerCoreCommittee} from "contracts/committees/TiebreakerCoreCommittee.sol";
 import {TiebreakerSubCommittee} from "contracts/committees/TiebreakerSubCommittee.sol";
 
-import {DualGovernanceConfig} from "contracts/libraries/DualGovernanceConfig.sol";
-import {ImmutableDualGovernanceConfigProvider} from "contracts/ImmutableDualGovernanceConfigProvider.sol";
-
 import {ConfigFileReader, ConfigFileBuilder, JsonKeys} from "../ConfigFiles.sol";
-import {DeployFiles} from "../DeployFiles.sol";
 
 import {Duration} from "contracts/types/Duration.sol";
 

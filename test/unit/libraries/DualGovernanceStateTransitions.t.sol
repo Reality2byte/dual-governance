@@ -2,8 +2,8 @@
 pragma solidity 0.8.26;
 
 import {Duration, Durations} from "contracts/types/Duration.sol";
-import {Timestamp, Timestamps} from "contracts/types/Timestamp.sol";
-import {PercentD16, PercentsD16} from "contracts/types/PercentD16.sol";
+import {Timestamps} from "contracts/types/Timestamp.sol";
+import {PercentsD16} from "contracts/types/PercentD16.sol";
 
 import {IEscrowBase} from "contracts/interfaces/IEscrowBase.sol";
 import {ISignallingEscrow} from "contracts/interfaces/ISignallingEscrow.sol";
@@ -108,9 +108,7 @@ contract DualGovernanceStateTransitionsUnitTestSuite is UnitTest {
     // VetoSignalling -> VetoSignalling (min veto signalling duration not passed)
     // ---
 
-    function test_getStateTransition_FromVetoSignallingToVetoSignalling_VetoSignallingReactivationNotPassed()
-        external
-    {
+    function test_getStateTransition_FromVetoSignallingToVetoSignalling_VetoSignallingReactivationNotPassed() external {
         _setMockRageQuitSupportInBP(3_00);
 
         // the veto signalling state was entered
@@ -375,9 +373,8 @@ contract DualGovernanceStateTransitionsUnitTestSuite is UnitTest {
     }
 
     function _calcVetoSignallingDuration() internal returns (Duration) {
-        return _configProvider.getDualGovernanceConfig().calcVetoSignallingDuration(
-            _stateMachine.signallingEscrow.getRageQuitSupport()
-        );
+        return _configProvider.getDualGovernanceConfig()
+            .calcVetoSignallingDuration(_stateMachine.signallingEscrow.getRageQuitSupport());
     }
 
     function _assertStateMachineTransition(State from, State to) internal {

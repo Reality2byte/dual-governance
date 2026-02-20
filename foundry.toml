@@ -28,8 +28,20 @@ test = 'test/kontrol'
 line_length = 120
 multiline_func_header = 'params_first_multi'
 
-[profile.lint]
-exclude_lints = ["mixed-case-function", "mixed-case-variable"]
+[lint]
+exclude_lints = [
+    "mixed-case-function",
+    "mixed-case-variable",
+    "unused-import",
+    "unaliased-plain-import",
+    "unsafe-typecast",
+    "erc20-unchecked-transfer",
+    "named-struct-fields",
+    "screaming-snake-case-const",
+    "unsafe-cheatcode",
+    "pascal-case-struct",
+    "screaming-snake-case-immutable",
+]
 
 [etherscan]
 mainnet = { key = "${ETHERSCAN_API_KEY}" }

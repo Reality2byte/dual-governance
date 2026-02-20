@@ -34,10 +34,10 @@ import {ISealable} from "test/utils/interfaces/ISealable.sol";
 
 import {UnstETHRecordStatus} from "contracts/libraries/AssetsAccounting.sol";
 
-import {IOracleReportSanityChecker} from "test/utils/interfaces/IOracleReportSanityChecker.sol";
-
 import {
-    DGSetupDeployConfig, DGSetupDeployArtifacts, DGSetupDeployedContracts
+    DGSetupDeployConfig,
+    DGSetupDeployArtifacts,
+    DGSetupDeployedContracts
 } from "scripts/utils/deployment/Setup.sol";
 import {TimelockContractDeployConfig} from "scripts/utils/deployment/Timelock.sol";
 

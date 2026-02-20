@@ -15,7 +15,6 @@ import {
     EXECUTOR_ROOT_KEY
 } from "scripts/utils/deployment/Setup.sol";
 import {ContractsDeployment} from "scripts/utils/contracts-deployment.sol";
-import {DeployVerification} from "scripts/utils/DeployVerification.sol";
 import {DeployFiles} from "scripts/utils/DeployFiles.sol";
 
 contract DeployExecutor is Script {

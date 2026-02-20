@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {
-    Durations,
-    Duration,
-    Timestamps,
-    Timestamp,
-    ContractsDeployment,
-    DGScenarioTestSetup,
-    MAINNET_CHAIN_ID
-} from "test/utils/integration-tests.sol";
+import {Durations, Duration, Timestamp, DGScenarioTestSetup, MAINNET_CHAIN_ID} from "test/utils/integration-tests.sol";
 import {LidoUtils} from "test/utils/lido-utils.sol";
 
 import {OmnibusBase} from "scripts/utils/OmnibusBase.sol";
@@ -76,9 +68,12 @@ contract MainnetLaunch is DGScenarioTestSetup, LidoAddressesMainnet {
                 emergencyGovernance: address(_dgDeployedContracts.emergencyGovernance),
                 emergencyActivationCommittee: _dgDeployedContracts.timelock.getEmergencyActivationCommittee(),
                 emergencyExecutionCommittee: _dgDeployedContracts.timelock.getEmergencyExecutionCommittee(),
-                emergencyProtectionEndDate: _dgDeployedContracts.timelock.getEmergencyProtectionDetails()
-                    .emergencyProtectionEndsAfter,
-                emergencyModeDuration: _dgDeployedContracts.timelock.getEmergencyProtectionDetails().emergencyModeDuration,
+                emergencyProtectionEndDate: _dgDeployedContracts.timelock
+                .getEmergencyProtectionDetails()
+                .emergencyProtectionEndsAfter,
+                emergencyModeDuration: _dgDeployedContracts.timelock
+                .getEmergencyProtectionDetails()
+                .emergencyModeDuration,
                 proposalsCount: 1
             })
         );

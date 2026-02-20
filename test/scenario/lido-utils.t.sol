@@ -3,10 +3,8 @@ pragma solidity 0.8.26;
 
 import {DGScenarioTestSetup, MAINNET_CHAIN_ID} from "test/utils/integration-tests.sol";
 import {LidoUtils} from "test/utils/lido-utils.sol";
-import {PercentsD16, PercentD16, HUNDRED_PERCENT_BP, HUNDRED_PERCENT_D16} from "contracts/types/PercentD16.sol";
+import {PercentsD16, PercentD16, HUNDRED_PERCENT_D16} from "contracts/types/PercentD16.sol";
 import {DecimalsFormatting} from "test/utils/formatting.sol";
-import {IOracleReportSanityChecker} from "test/utils/interfaces/IOracleReportSanityChecker.sol";
-import {Durations} from "contracts/types/Duration.sol";
 
 uint256 constant ACCURACY = 2 wei;
 

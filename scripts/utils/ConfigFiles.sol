@@ -7,7 +7,7 @@ import {stdToml} from "forge-std/StdToml.sol";
 
 import {Duration, Durations} from "contracts/types/Duration.sol";
 import {Timestamp, Timestamps} from "contracts/types/Timestamp.sol";
-import {PercentD16, PercentsD16} from "contracts/types/PercentD16.sol";
+import {PercentD16} from "contracts/types/PercentD16.sol";
 
 // solhint-disable-next-line const-name-snakecase
 Vm constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));

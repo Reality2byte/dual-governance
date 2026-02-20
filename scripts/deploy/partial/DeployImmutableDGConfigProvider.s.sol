@@ -18,7 +18,6 @@ import {
     ImmutableDualGovernanceConfigProviderDeployConfig,
     DEFAULT_ROOT_KEY as DG_CONFIG_PROVIDER_ROOT_KEY
 } from "scripts/utils/deployment/ImmutableDualGovernanceConfigProvider.sol";
-import {DeployVerification} from "scripts/utils/DeployVerification.sol";
 import {DeployFiles} from "scripts/utils/DeployFiles.sol";
 
 contract DeployImmutableDGConfigProvider is Script {
@@ -50,8 +49,10 @@ contract DeployImmutableDGConfigProvider is Script {
 
         vm.startBroadcast();
 
-        deployArtifact.deployedContracts.dualGovernanceConfigProvider = ContractsDeployment
-            .deployDualGovernanceConfigProvider(deployArtifact.deployConfig.dualGovernanceConfigProvider);
+        deployArtifact.deployedContracts.dualGovernanceConfigProvider =
+            ContractsDeployment.deployDualGovernanceConfigProvider(
+                deployArtifact.deployConfig.dualGovernanceConfigProvider
+            );
 
         vm.stopBroadcast();
 

@@ -23,21 +23,14 @@ import {TiebreakerSubCommittee} from "contracts/committees/TiebreakerSubCommitte
 import {ITiebreaker} from "contracts/interfaces/ITiebreaker.sol";
 import {IDualGovernance} from "contracts/interfaces/IDualGovernance.sol";
 import {ITimelock} from "contracts/interfaces/ITimelock.sol";
-import {IDualGovernanceConfigProvider} from "contracts/interfaces/IDualGovernanceConfigProvider.sol";
-
 import {Proposers} from "contracts/libraries/Proposers.sol";
 
-import {PercentsD16, PercentD16, HUNDRED_PERCENT_D16} from "contracts/types/PercentD16.sol";
+import {PercentsD16, HUNDRED_PERCENT_D16} from "contracts/types/PercentD16.sol";
 import {Timestamps, Timestamp} from "contracts/types/Timestamp.sol";
 import {Duration, Durations} from "contracts/types/Duration.sol";
 
 import {ContractsDeployment, DGRegressionTestSetup} from "test/utils/integration-tests.sol";
-import {
-    DGSetupDeployArtifacts,
-    DGSetupDeployConfig,
-    TiebreakerDeployConfig,
-    TiebreakerDeployedContracts
-} from "scripts/utils/contracts-deployment.sol";
+import {TiebreakerDeployConfig, TiebreakerDeployedContracts} from "scripts/utils/contracts-deployment.sol";
 
 contract DualGovernanceUpgradeScenariosRegressionTest is DGRegressionTestSetup {
     using ExternalCallsBuilder for ExternalCallsBuilder.Context;
