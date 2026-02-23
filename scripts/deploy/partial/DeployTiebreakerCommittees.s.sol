@@ -14,12 +14,7 @@ import {
     DGSetupDeployArtifacts,
     DGSetupDeployedContracts
 } from "scripts/utils/contracts-deployment.sol";
-import {
-    TiebreakerDeployConfig,
-    TiebreakerDeployedContracts,
-    DEFAULT_ROOT_KEY as TIEBREAKER_ROOT_KEY
-} from "scripts/utils/deployment/Tiebreaker.sol";
-import {DeployVerification} from "scripts/utils/DeployVerification.sol";
+import {TiebreakerDeployConfig, DEFAULT_ROOT_KEY as TIEBREAKER_ROOT_KEY} from "scripts/utils/deployment/Tiebreaker.sol";
 import {DeployFiles} from "scripts/utils/DeployFiles.sol";
 
 contract DeployTiebreakerCommittees is Script {

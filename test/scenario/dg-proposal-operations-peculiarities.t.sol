@@ -8,7 +8,6 @@ import {PercentsD16} from "contracts/types/PercentD16.sol";
 
 import {ExternalCall} from "contracts/libraries/ExternalCalls.sol";
 
-import {ITimelock} from "contracts/interfaces/ITimelock.sol";
 import {IRageQuitEscrow} from "contracts/interfaces/IRageQuitEscrow.sol";
 import {IPotentiallyDangerousContract} from "../utils/interfaces/IPotentiallyDangerousContract.sol";
 
@@ -200,8 +199,9 @@ contract DGProposalOperationsPeculiaritiesTest is DGScenarioTestSetup {
         uint256 proposalId;
         _step("1. The proposal is submitted");
         {
-            proposalId =
-                _submitProposalByAdminProposer(regularStuffCalls, "Propose to doSmth on target passing dual governance");
+            proposalId = _submitProposalByAdminProposer(
+                regularStuffCalls, "Propose to doSmth on target passing dual governance"
+            );
 
             _assertSubmittedProposalData(proposalId, _timelock.getAdminExecutor(), regularStuffCalls);
             _assertCanSchedule(proposalId, false);
@@ -363,8 +363,7 @@ contract DGProposalOperationsPeculiaritiesTest is DGScenarioTestSetup {
                 ExternalCallsBuilder.create({callsCount: 1});
 
             afterScheduleDelayProposalBuilder.addCall({
-                target: address(_timelock),
-                payload: abi.encodeCall(_timelock.setAfterScheduleDelay, (Durations.ZERO))
+                target: address(_timelock), payload: abi.encodeCall(_timelock.setAfterScheduleDelay, (Durations.ZERO))
             });
             uint256 proposalId = _submitProposalByAdminProposer(
                 afterScheduleDelayProposalBuilder.getResult(), "Setting afterScheduleDelay to zero"

@@ -12,7 +12,7 @@ import {EscrowState, State} from "contracts/libraries/EscrowState.sol";
 import {WithdrawalsBatchesQueue} from "contracts/libraries/WithdrawalsBatchesQueue.sol";
 import {AssetsAccounting, UnstETHRecordStatus} from "contracts/libraries/AssetsAccounting.sol";
 
-import {Escrow, IRageQuitEscrow, ISignallingEscrow} from "contracts/Escrow.sol";
+import {Escrow, ISignallingEscrow} from "contracts/Escrow.sol";
 
 import {LidoUtils, DGScenarioTestSetup} from "../utils/integration-tests.sol";
 

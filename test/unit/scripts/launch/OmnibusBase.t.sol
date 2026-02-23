@@ -3,7 +3,6 @@ pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {OmnibusBase} from "scripts/utils/OmnibusBase.sol";
-import {ExternalCall} from "contracts/libraries/ExternalCalls.sol";
 import {IForwarder} from "scripts/launch/interfaces/IForwarder.sol";
 import {IVoting} from "scripts/launch/interfaces/IVoting.sol";
 import {CallsScriptBuilder} from "scripts/utils/CallsScriptBuilder.sol";
@@ -60,14 +59,12 @@ contract OmnibusBaseTest is Test {
 
         bytes memory callData1 = abi.encodeWithSignature("someFunction(uint256)", 123);
         items[0] = OmnibusBase.VoteItem({
-            description: "First vote item",
-            call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_1, callData1)
+            description: "First vote item", call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_1, callData1)
         });
 
         bytes memory callData2 = abi.encodeWithSignature("anotherFunction(address)", address(0x456));
         items[1] = OmnibusBase.VoteItem({
-            description: "Second vote item",
-            call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_2, callData2)
+            description: "Second vote item", call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_2, callData2)
         });
 
         omnibusBase.setVoteItems(items);
@@ -80,20 +77,17 @@ contract OmnibusBaseTest is Test {
 
         bytes memory callData1 = abi.encodeWithSignature("someFunction(uint256)", 123);
         items[0] = OmnibusBase.VoteItem({
-            description: "First vote item",
-            call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_1, callData1)
+            description: "First vote item", call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_1, callData1)
         });
 
         bytes memory callData2 = abi.encodeWithSignature("anotherFunction(address)", address(0x456));
         items[1] = OmnibusBase.VoteItem({
-            description: "Second vote item",
-            call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_2, callData2)
+            description: "Second vote item", call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_2, callData2)
         });
 
         bytes memory callData3 = abi.encodeWithSignature("anotherFunction()");
         items[2] = OmnibusBase.VoteItem({
-            description: "Second vote item",
-            call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_3, callData3)
+            description: "Second vote item", call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_3, callData3)
         });
 
         omnibusBase.setVoteItems(items);
@@ -126,21 +120,18 @@ contract OmnibusBaseTest is Test {
 
         bytes memory callData1 = abi.encodeWithSignature("someFunction(uint256)", 123);
         items[0] = OmnibusBase.VoteItem({
-            description: "First vote item",
-            call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_1, callData1)
+            description: "First vote item", call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_1, callData1)
         });
 
         bytes memory callData2 = abi.encodeWithSignature("anotherFunction(address)", address(0x456));
         items[1] = OmnibusBase.VoteItem({
-            description: "Second vote item",
-            call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_2, callData2)
+            description: "Second vote item", call: OmnibusBase.ScriptCall(TARGET_ADDRESS_MOCK_2, callData2)
         });
 
         omnibusBase.setVoteItems(items);
 
-        bytes memory differentScript = CallsScriptBuilder.create(items[1].call.to, items[1].call.data).addCall(
-            items[0].call.to, items[0].call.data
-        ).getResult();
+        bytes memory differentScript = CallsScriptBuilder.create(items[1].call.to, items[1].call.data)
+            .addCall(items[0].call.to, items[0].call.data).getResult();
         bytes memory mockReturn = abi.encode(
             true, // open
             false, // executed

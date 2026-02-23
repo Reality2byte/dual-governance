@@ -7,24 +7,11 @@ import {console} from "forge-std/console.sol";
 
 import {IStETH} from "contracts/interfaces/IStETH.sol";
 import {IWstETH} from "contracts/interfaces/IWstETH.sol";
-import {ITimelock} from "contracts/interfaces/ITimelock.sol";
 import {IWithdrawalQueue} from "contracts/interfaces/IWithdrawalQueue.sol";
-import {ISignallingEscrow} from "contracts/interfaces/ISignallingEscrow.sol";
 
-import {Duration, Durations} from "contracts/types/Duration.sol";
-import {Timestamp, Timestamps} from "contracts/types/Timestamp.sol";
+import {Duration} from "contracts/types/Duration.sol";
 
-import {Escrow} from "contracts/Escrow.sol";
-import {Executor} from "contracts/Executor.sol";
-import {ResealManager} from "contracts/ResealManager.sol";
 import {DualGovernance} from "contracts/DualGovernance.sol";
-import {TimelockedGovernance} from "contracts/TimelockedGovernance.sol";
-import {DualGovernanceConfig} from "contracts/libraries/DualGovernanceConfig.sol";
-import {EmergencyProtectedTimelock} from "contracts/EmergencyProtectedTimelock.sol";
-import {ImmutableDualGovernanceConfigProvider} from "contracts/ImmutableDualGovernanceConfigProvider.sol";
-
-import {TiebreakerCoreCommittee} from "contracts/committees/TiebreakerCoreCommittee.sol";
-import {TiebreakerSubCommittee} from "contracts/committees/TiebreakerSubCommittee.sol";
 
 import {ConfigFileReader, ConfigFileBuilder, JsonKeys} from "../ConfigFiles.sol";
 
@@ -62,9 +49,15 @@ library DualGovernanceContractDeployConfig {
             sealableWithdrawalBlockers: file.readAddressArray($.key("sealable_withdrawal_blockers")),
             sanityCheckParams: DualGovernance.SanityCheckParams({
                 minWithdrawalsBatchSize: file.readUint($sanityCheck.key("min_withdrawals_batch_size")),
-                minTiebreakerActivationTimeout: file.readDuration($sanityCheck.key("min_tiebreaker_activation_timeout")),
-                maxTiebreakerActivationTimeout: file.readDuration($sanityCheck.key("max_tiebreaker_activation_timeout")),
-                maxSealableWithdrawalBlockersCount: file.readUint($sanityCheck.key("max_sealable_withdrawal_blockers_count")),
+                minTiebreakerActivationTimeout: file.readDuration(
+                    $sanityCheck.key("min_tiebreaker_activation_timeout")
+                ),
+                maxTiebreakerActivationTimeout: file.readDuration(
+                    $sanityCheck.key("max_tiebreaker_activation_timeout")
+                ),
+                maxSealableWithdrawalBlockersCount: file.readUint(
+                    $sanityCheck.key("max_sealable_withdrawal_blockers_count")
+                ),
                 maxMinAssetsLockDuration: file.readDuration($sanityCheck.key("max_min_assets_lock_duration"))
             }),
             signallingTokens: DualGovernance.SignallingTokens({

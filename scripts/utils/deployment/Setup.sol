@@ -3,17 +3,7 @@ pragma solidity 0.8.26;
 
 /* solhint-disable no-console */
 
-import {Vm} from "forge-std/Vm.sol";
 import {console} from "forge-std/console.sol";
-
-import {IStETH} from "contracts/interfaces/IStETH.sol";
-import {IWstETH} from "contracts/interfaces/IWstETH.sol";
-import {ITimelock} from "contracts/interfaces/ITimelock.sol";
-import {IWithdrawalQueue} from "contracts/interfaces/IWithdrawalQueue.sol";
-import {ISignallingEscrow} from "contracts/interfaces/ISignallingEscrow.sol";
-
-import {Duration, Durations} from "contracts/types/Duration.sol";
-import {Timestamp, Timestamps} from "contracts/types/Timestamp.sol";
 
 import {Escrow} from "contracts/Escrow.sol";
 import {Executor} from "contracts/Executor.sol";
@@ -29,9 +19,7 @@ import {TiebreakerSubCommittee} from "contracts/committees/TiebreakerSubCommitte
 
 import {ImmutableDualGovernanceConfigProviderDeployConfig} from "./ImmutableDualGovernanceConfigProvider.sol";
 import {DualGovernanceContractDeployConfig} from "./DualGovernance.sol";
-import {
-    TiebreakerDeployConfig, TiebreakerSubCommitteeDeployConfig, TiebreakerDeployedContracts
-} from "./Tiebreaker.sol";
+import {TiebreakerDeployConfig} from "./Tiebreaker.sol";
 import {TimelockContractDeployConfig} from "./Timelock.sol";
 import {IVotingProvider} from "scripts/utils/interfaces/IVotingProvider.sol";
 

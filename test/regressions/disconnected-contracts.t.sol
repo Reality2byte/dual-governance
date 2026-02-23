@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: MIT
+/* solhint-disable no-console */
 pragma solidity 0.8.26;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-
-import {PercentD16, PercentsD16} from "contracts/types/PercentD16.sol";
+import {PercentsD16} from "contracts/types/PercentD16.sol";
 import {Duration, Durations} from "contracts/types/Duration.sol";
 
-import {IWithdrawalQueue} from "contracts/interfaces/IWithdrawalQueue.sol";
-import {ISignallingEscrow} from "contracts/interfaces/ISignallingEscrow.sol";
-import {IRageQuitEscrow} from "contracts/interfaces/IRageQuitEscrow.sol";
-import {AssetsAccounting, UnstETHRecordStatus} from "contracts/libraries/AssetsAccounting.sol";
-import {WithdrawalsBatchesQueue} from "contracts/libraries/WithdrawalsBatchesQueue.sol";
 import {DualGovernanceConfig} from "contracts/libraries/DualGovernanceConfig.sol";
 
 import {Escrow} from "contracts/Escrow.sol";
@@ -53,8 +47,7 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
         dualGovernance = DualGovernance(MAINNET_DISCONNECTED_DUAL_GOVERNANCE);
         escrow = Escrow(payable(dualGovernance.getVetoSignallingEscrow()));
 
-        minAssetsLockDurationOnDisconnectedEscrow = escrow
-            .getMinAssetsLockDuration();
+        minAssetsLockDurationOnDisconnectedEscrow = escrow.getMinAssetsLockDuration();
 
         _setupStETHBalance(_VETOER_1, PercentsD16.fromBasisPoints(50_01));
 
@@ -74,14 +67,9 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = firstVetoerLockStETHAmount;
         vm.prank(_VETOER_1);
-        uint256[] memory unstETHIds = _lido.withdrawalQueue.requestWithdrawals(
-            amounts,
-            _VETOER_1
-        );
+        uint256[] memory unstETHIds = _lido.withdrawalQueue.requestWithdrawals(amounts, _VETOER_1);
 
-        uint256 firstVetoerStETHBalanceBefore = _lido.stETH.balanceOf(
-            _VETOER_1
-        );
+        uint256 firstVetoerStETHBalanceBefore = _lido.stETH.balanceOf(_VETOER_1);
 
         vm.startPrank(_VETOER_1);
         escrow.lockStETH(firstVetoerLockStETHAmount);
@@ -92,10 +80,7 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
         _lido.withdrawalQueue.setApprovalForAll(address(escrow), false);
         vm.stopPrank();
 
-        assert(
-            minAssetsLockDurationOnDisconnectedEscrow ==
-                Durations.from(1 seconds)
-        );
+        assert(minAssetsLockDurationOnDisconnectedEscrow == Durations.from(1 seconds));
         _wait(minAssetsLockDurationOnDisconnectedEscrow.plusSeconds(1));
 
         vm.startPrank(_VETOER_1);
@@ -105,8 +90,7 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
 
         assertApproxEqAbs(
             _lido.stETH.balanceOf(_VETOER_1),
-            firstVetoerStETHBalanceBefore +
-                _lido.stETH.getPooledEthByShares(firstVetoerLockWstETHAmount),
+            firstVetoerStETHBalanceBefore + _lido.stETH.getPooledEthByShares(firstVetoerLockWstETHAmount),
             ACCURACY
         );
     }
@@ -116,9 +100,7 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
         _step("0. Checking that rage quit support is less than 0.01%");
         {
             assert(escrow.getRageQuitSupport() < PercentsD16.fromBasisPoints(1));
-            assert(
-                dualGovernance.getEffectiveState() == DualGovernanceState.Normal
-            );
+            assert(dualGovernance.getEffectiveState() == DualGovernanceState.Normal);
         }
 
         _step("1. Lock more than 50% of TVL");
@@ -133,13 +115,9 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
         {
             dualGovernance.activateNextState();
             console.log("Rage quit support:", escrow.getRageQuitSupport().toUint256());
-            assert(
-                escrow.getRageQuitSupport() >= PercentsD16.fromBasisPoints(50_00)
-            );
+            assert(escrow.getRageQuitSupport() >= PercentsD16.fromBasisPoints(50_00));
             console.log("Effective state:", uint256(dualGovernance.getEffectiveState()));
-            assert(
-                dualGovernance.getEffectiveState() == DualGovernanceState.Normal
-            );
+            assert(dualGovernance.getEffectiveState() == DualGovernanceState.Normal);
         }
     }
 
@@ -155,23 +133,15 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
 
         _step("1. Checking that rage quit support is less than 0.01%");
         {
-            assert(
-                escrow.getRageQuitSupport() < PercentsD16.fromBasisPoints(1)
-            );
-            assert(
-                dualGovernance.getEffectiveState() == DualGovernanceState.Normal
-            );
+            assert(escrow.getRageQuitSupport() < PercentsD16.fromBasisPoints(1));
+            assert(dualGovernance.getEffectiveState() == DualGovernanceState.Normal);
         }
 
         _step("2. Create withdrawal NFT to bypass 99.99% rage quit");
         {
             uint256 vetoerBalance = _lido.stETH.balanceOf(_VETOER_1);
-            uint256 minRequestAmount = _lido
-                .withdrawalQueue
-                .MIN_STETH_WITHDRAWAL_AMOUNT();
-            uint256 requestAmount = _lido
-                .withdrawalQueue
-                .MAX_STETH_WITHDRAWAL_AMOUNT();
+            uint256 minRequestAmount = _lido.withdrawalQueue.MIN_STETH_WITHDRAWAL_AMOUNT();
+            uint256 requestAmount = _lido.withdrawalQueue.MAX_STETH_WITHDRAWAL_AMOUNT();
             uint256 requestsCount = vetoerBalance / requestAmount + 1;
             uint256[] memory amounts = new uint256[](requestsCount);
 
@@ -184,19 +154,14 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
                     _lido.stETH.submit{value: topUpAmount}(address(0));
                     vetoerBalance = _lido.stETH.balanceOf(_VETOER_1);
                 }
-                uint256 amount = vetoerBalance <= requestAmount
-                    ? vetoerBalance
-                    : requestAmount;
+                uint256 amount = vetoerBalance <= requestAmount ? vetoerBalance : requestAmount;
                 amounts[i] = amount;
                 vetoerBalance -= amount;
                 i++;
             }
 
             vm.startPrank(_VETOER_1);
-            unstETHIds = _lido.withdrawalQueue.requestWithdrawals(
-                amounts,
-                _VETOER_1
-            );
+            unstETHIds = _lido.withdrawalQueue.requestWithdrawals(amounts, _VETOER_1);
             {
                 _lido.withdrawalQueue.setApprovalForAll(address(escrow), true);
                 escrow.lockUnstETH(unstETHIds);
@@ -205,65 +170,40 @@ contract DisconnectedContractsRegressionTest is DGRegressionTestSetup {
             vm.stopPrank();
 
             for (i = 0; i < unstETHIds.length; ++i) {
-                assertEq(
-                    _lido.withdrawalQueue.ownerOf(unstETHIds[i]),
-                    address(escrow)
-                );
+                assertEq(_lido.withdrawalQueue.ownerOf(unstETHIds[i]), address(escrow));
             }
             _finalizeWithdrawalQueue();
 
-            assert(
-                escrow.getRageQuitSupport() > PercentsD16.fromBasisPoints(99_99)
-            );
+            assert(escrow.getRageQuitSupport() > PercentsD16.fromBasisPoints(99_99));
         }
 
         _step("3. 99.99% reached. Transition to VetoSignalling state");
         {
             dualGovernance.activateNextState();
-            assert(
-                dualGovernance.getEffectiveState() ==
-                    DualGovernanceState.VetoSignalling
-            );
+            assert(dualGovernance.getEffectiveState() == DualGovernanceState.VetoSignalling);
         }
 
         _step("4. Transition to RageQuit state");
         {
-            _wait(
-                dualGovernance
-                    .getConfigProvider()
-                    .getDualGovernanceConfig()
-                    .vetoSignallingMaxDuration
-                    .plusSeconds(1)
-            );
+            _wait(dualGovernance.getConfigProvider().getDualGovernanceConfig().vetoSignallingMaxDuration.plusSeconds(1));
             dualGovernance.activateNextState();
-            assert(
-                dualGovernance.getEffectiveState() ==
-                    DualGovernanceState.RageQuit
-            );
+            assert(dualGovernance.getEffectiveState() == DualGovernanceState.RageQuit);
             while (!escrow.isWithdrawalsBatchesClosed()) {
-                escrow.requestNextWithdrawalsBatch(
-                    escrow.MIN_WITHDRAWALS_BATCH_SIZE()
-                );
+                escrow.requestNextWithdrawalsBatch(escrow.MIN_WITHDRAWALS_BATCH_SIZE());
             }
             _finalizeWithdrawalQueue();
             escrow.claimNextWithdrawalsBatch(1);
             escrow.startRageQuitExtensionPeriod();
             _wait(
-                dualGovernance
-                    .getConfigProvider()
-                    .getDualGovernanceConfig()
-                    .rageQuitExtensionPeriodDuration
+                dualGovernance.getConfigProvider().getDualGovernanceConfig().rageQuitExtensionPeriodDuration
                     .plusSeconds(1)
             );
         }
 
         _step("5. Claim locked assets");
         {
-            uint256[] memory hints = _lido.withdrawalQueue.findCheckpointHints(
-                unstETHIds,
-                1,
-                _lido.withdrawalQueue.getLastCheckpointIndex()
-            );
+            uint256[] memory hints = _lido.withdrawalQueue
+            .findCheckpointHints(unstETHIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
 
             escrow.claimUnstETH(unstETHIds, hints);
             vm.startPrank(_VETOER_1);

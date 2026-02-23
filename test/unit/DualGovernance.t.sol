@@ -25,7 +25,6 @@ import {
 } from "contracts/ImmutableDualGovernanceConfigProvider.sol";
 
 import {IDualGovernance} from "contracts/interfaces/IDualGovernance.sol";
-import {IWstETH} from "contracts/interfaces/IWstETH.sol";
 import {IWithdrawalQueue} from "contracts/interfaces/IWithdrawalQueue.sol";
 import {ITimelock} from "contracts/interfaces/ITimelock.sol";
 import {ITiebreaker} from "contracts/interfaces/ITiebreaker.sol";

@@ -2,7 +2,7 @@
 pragma solidity 0.8.26;
 
 import {Timestamp, Timestamps} from "contracts/types/Timestamp.sol";
-import {Duration, Durations, MAX_DURATION_VALUE} from "contracts/types/Duration.sol";
+import {Duration, Durations} from "contracts/types/Duration.sol";
 import {PercentD16, PercentsD16} from "contracts/types/PercentD16.sol";
 
 import {DualGovernanceConfig, PercentD16} from "contracts/libraries/DualGovernanceConfig.sol";
@@ -42,9 +42,9 @@ contract DualGovernanceConfigTest is UnitTest {
         this.external__validate(config);
     }
 
-    function testFuzz_validate_RevertOn_InvalidSecondSealRageQuitSupport(DualGovernanceConfig.Context memory config)
-        external
-    {
+    function testFuzz_validate_RevertOn_InvalidSecondSealRageQuitSupport(
+        DualGovernanceConfig.Context memory config
+    ) external {
         vm.assume(config.secondSealRageQuitSupport > _MAX_SECOND_SEAL_RAGE_QUIT_SUPPORT);
         vm.assume(config.firstSealRageQuitSupport < config.secondSealRageQuitSupport);
         vm.assume(config.vetoSignallingMinDuration < config.vetoSignallingMaxDuration);
@@ -59,9 +59,9 @@ contract DualGovernanceConfigTest is UnitTest {
         this.external__validate(config);
     }
 
-    function testFuzz_validate_RevertOn_InvalidSealRageQuitSupportRange(DualGovernanceConfig.Context memory config)
-        external
-    {
+    function testFuzz_validate_RevertOn_InvalidSealRageQuitSupportRange(
+        DualGovernanceConfig.Context memory config
+    ) external {
         vm.assume(config.secondSealRageQuitSupport <= _MAX_SECOND_SEAL_RAGE_QUIT_SUPPORT);
         vm.assume(config.firstSealRageQuitSupport >= config.secondSealRageQuitSupport);
         vm.assume(config.vetoSignallingMinDuration < config.vetoSignallingMaxDuration);
@@ -77,9 +77,9 @@ contract DualGovernanceConfigTest is UnitTest {
         this.external__validate(config);
     }
 
-    function testFuzz_validate_RevertOn_InvalidVetoSignallingDurationRange(DualGovernanceConfig.Context memory config)
-        external
-    {
+    function testFuzz_validate_RevertOn_InvalidVetoSignallingDurationRange(
+        DualGovernanceConfig.Context memory config
+    ) external {
         vm.assume(config.firstSealRageQuitSupport < config.secondSealRageQuitSupport);
         vm.assume(config.secondSealRageQuitSupport < _MAX_SECOND_SEAL_RAGE_QUIT_SUPPORT);
         vm.assume(config.vetoSignallingMinDuration >= config.vetoSignallingMaxDuration);
