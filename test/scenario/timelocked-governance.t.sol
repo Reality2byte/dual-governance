@@ -6,8 +6,6 @@ import {EmergencyProtection} from "contracts/libraries/EmergencyProtection.sol";
 import {DualGovernance} from "contracts/DualGovernance.sol";
 import {ContractsDeployment, TGScenarioTestSetup, DGScenarioTestSetup} from "../utils/integration-tests.sol";
 
-import {IPotentiallyDangerousContract} from "../utils/interfaces/IPotentiallyDangerousContract.sol";
-
 import {ExternalCallsBuilder} from "scripts/utils/ExternalCallsBuilder.sol";
 
 contract TimelockedGovernanceScenario is TGScenarioTestSetup, DGScenarioTestSetup {

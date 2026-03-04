@@ -20,11 +20,17 @@ using ConfigFileBuilder for ConfigFileBuilder.Context;
 // solhint-disable-next-line const-name-snakecase
 Vm constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
+string constant DEFAULT_ROOT_KEY = "dual_governance_config_provider";
+
 library ImmutableDualGovernanceConfigProviderDeployConfig {
     using DualGovernanceConfig for DualGovernanceConfig.Context;
     using DecimalsFormatting for PercentD16;
 
     error InvalidChainId(uint256 actual, uint256 expected);
+
+    function load(string memory configFilePath) internal view returns (DualGovernanceConfig.Context memory ctx) {
+        return load(configFilePath, "");
+    }
 
     function load(
         string memory configFilePath,
@@ -32,7 +38,8 @@ library ImmutableDualGovernanceConfigProviderDeployConfig {
     ) internal view returns (DualGovernanceConfig.Context memory ctx) {
         ConfigFileReader.Context memory file = ConfigFileReader.load(configFilePath);
 
-        string memory $ = configRootKey.root();
+        string memory configRoot = configRootKey.root();
+        string memory $ = configRoot.key(DEFAULT_ROOT_KEY);
 
         return DualGovernanceConfig.Context({
             firstSealRageQuitSupport: PercentsD16.from(file.readUint($.key("first_seal_rage_quit_support"))),

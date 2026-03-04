@@ -8,9 +8,7 @@ import {Timestamp, Timestamps} from "contracts/types/Timestamp.sol";
 
 import {ITimelock} from "contracts/interfaces/ITimelock.sol";
 import {Executor} from "contracts/Executor.sol";
-import {
-    ExecutableProposals, ExternalCall, Status as ProposalStatus
-} from "contracts/libraries/ExecutableProposals.sol";
+import {ExecutableProposals, ExternalCall, Status as ProposalStatus} from "contracts/libraries/ExecutableProposals.sol";
 
 import {TargetMock} from "test/utils/target-mock.sol";
 import {UnitTest} from "test/utils/unit-test.sol";
@@ -268,7 +266,6 @@ contract ExecutableProposalsUnitTests is UnitTest {
         assertEq(_proposals.lastCancelledProposalId, proposalsCount);
     }
 
-    // TODO: change this test completely to use getters
     function test_get_proposal_info_and_external_calls() external {
         ExternalCall[] memory expectedCalls = _getMockTargetRegularStaffCalls(address(_targetMock));
         _proposals.submit(address(_executor), expectedCalls);

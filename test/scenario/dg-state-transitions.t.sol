@@ -4,7 +4,7 @@ pragma solidity 0.8.26;
 import {Durations} from "contracts/types/Duration.sol";
 import {PercentsD16} from "contracts/types/PercentD16.sol";
 
-import {DGScenarioTestSetup, ExternalCall} from "../utils/integration-tests.sol";
+import {DGScenarioTestSetup} from "../utils/integration-tests.sol";
 
 contract DualGovernanceStateTransitions is DGScenarioTestSetup {
     address internal immutable _VETOER = makeAddr("VETOER");

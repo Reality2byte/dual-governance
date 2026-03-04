@@ -17,8 +17,6 @@ import {ITimelock} from "contracts/interfaces/ITimelock.sol";
 
 import {Status as ProposalStatus} from "contracts/libraries/ExecutableProposals.sol";
 
-import {TimelockedGovernance} from "contracts/TimelockedGovernance.sol";
-
 import {DeployVerification} from "../utils/DeployVerification.sol";
 
 import {DGSetupDeployArtifacts, DGSetupDeployConfig, DGLaunchConfig} from "../utils/contracts-deployment.sol";
@@ -127,9 +125,8 @@ contract LaunchAcceptance is DGDeployArtifactLoader {
             }
 
             vm.prank(_config.timelock.emergencyGovernanceProposer);
-            uint256 dgProposalId = _dgContracts.emergencyGovernance.submitProposal(
-                builder.getResult(), "Reset emergency mode and set original DG as governance"
-            );
+            uint256 dgProposalId = _dgContracts.emergencyGovernance
+                .submitProposal(builder.getResult(), "Reset emergency mode and set original DG as governance");
 
             console.log("DG Proposal submitted");
 
@@ -266,16 +263,16 @@ contract LaunchAcceptance is DGDeployArtifactLoader {
             console.log("STEP 10 - Verify DAO has no agent forward permission from Voting");
 
             bytes memory revokePermissionScript = CallsScriptBuilder.create(
-                address(_lidoUtils.acl),
-                abi.encodeCall(
-                    IAragonACL.revokePermission,
-                    (
-                        address(_dgContracts.adminExecutor),
-                        address(_lidoUtils.agent),
-                        IAragonAgent(_lidoUtils.agent).RUN_SCRIPT_ROLE()
+                    address(_lidoUtils.acl),
+                    abi.encodeCall(
+                        IAragonACL.revokePermission,
+                        (
+                            address(_dgContracts.adminExecutor),
+                            address(_lidoUtils.agent),
+                            IAragonAgent(_lidoUtils.agent).RUN_SCRIPT_ROLE()
+                        )
                     )
-                )
-            ).getResult();
+                ).getResult();
 
             vm.expectRevert("AGENT_CAN_NOT_FORWARD");
             vm.prank(address(_lidoUtils.voting));

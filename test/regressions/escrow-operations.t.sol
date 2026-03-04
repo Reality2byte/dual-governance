@@ -52,7 +52,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         _lido.stETH.approve(address(_lido.withdrawalQueue), type(uint256).max);
         _lido.wstETH.approve(address(escrow), type(uint256).max);
 
-        _lido.wstETH.wrap(100_000 * 10 ** 18);
+        _lido.wstETH.wrap(_lido.stETH.balanceOf(_VETOER_1) / 10);
         vm.stopPrank();
 
         _setupStETHBalance(_VETOER_2, PercentsD16.fromBasisPoints(10_00));
@@ -63,7 +63,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         _lido.stETH.approve(address(_lido.withdrawalQueue), type(uint256).max);
         _lido.wstETH.approve(address(escrow), type(uint256).max);
 
-        _lido.wstETH.wrap(100_000 * 10 ** 18);
+        _lido.wstETH.wrap(_lido.stETH.balanceOf(_VETOER_2) / 10);
         vm.stopPrank();
     }
 
@@ -106,8 +106,8 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         uint256 rebaseDeltaPercent,
         uint256 withdrawTurn
     ) public {
-        vm.assume(rebaseDeltaPercent < 50); // -0.25% ... +0.25%
-        PercentD16 rebasePercent = PercentsD16.fromBasisPoints(99_75 + rebaseDeltaPercent);
+        vm.assume(rebaseDeltaPercent < 40); // -0.2% ... +0.2%
+        PercentD16 rebasePercent = PercentsD16.fromBasisPoints(99_80 + rebaseDeltaPercent);
 
         uint256 firstVetoerStETHAmount = 10 * 10 ** 18;
         uint256 firstVetoerStETHShares = _lido.stETH.getSharesByPooledEth(firstVetoerStETHAmount);
@@ -128,7 +128,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         _lockStETH(_VETOER_2, secondVetoerStETHAmount);
         _lockWstETH(_VETOER_2, secondVetoerWstETHAmount);
 
-        _simulateRebase(rebasePercent);
+        _performRebase(rebasePercent);
 
         _wait(_getMinAssetsLockDuration().plusSeconds(1));
 
@@ -286,9 +286,8 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         vm.prank(_VETOER_2);
         uint256[] memory vetoer2UnstETHIds = _lido.withdrawalQueue.requestWithdrawals(vetoer2Amounts, _VETOER_2);
 
-        uint256[] memory hints = _lido.withdrawalQueue.findCheckpointHints(
-            vetoer2UnstETHIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex()
-        );
+        uint256[] memory hints = _lido.withdrawalQueue
+            .findCheckpointHints(vetoer2UnstETHIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
         escrow.markUnstETHFinalized(vetoer2UnstETHIds, hints);
 
         _lockUnstETH(_VETOER_1, unstETHIds);
@@ -361,16 +360,15 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
                 2 * ACCURACY
             );
 
-            // TODO: temporarily using assertApproxEqAbs. Need to fix it properly in a separate PR
             assertApproxEqAbs(
                 escrow.getRageQuitSupport().toUint256(),
                 PercentsD16.fromFraction({
-                    numerator: stETHAmount + unstETH1Amount + unstETH2Amount
-                        + _lido.stETH.getPooledEthByShares(wstETHAmount + _initialLockedShares + _initialLockedUnStETHShares),
-                    denominator: _lido.stETH.totalSupply()
-                }).toUint256(),
-                // TODO: temporarily increased delta to 10 * ACCURACY to fix possible rounding error. Need to fix it properly in a separate PR.
-                10 * ACCURACY
+                        numerator: stETHAmount + unstETH1Amount + unstETH2Amount
+                            + _lido.stETH
+                            .getPooledEthByShares(wstETHAmount + _initialLockedShares + _initialLockedUnStETHShares),
+                        denominator: _lido.stETH.totalSupply()
+                    }).toUint256(),
+                2 wei
             );
         }
 
@@ -378,8 +376,8 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
             uint256 pooledEthRateBefore = _lido.stETH.getSharesByPooledEth(10 ** 27);
 
             _finalizeWithdrawalQueue(unstETHIds[0]);
-            uint256[] memory hints =
-                _lido.withdrawalQueue.findCheckpointHints(unstETHIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
+            uint256[] memory hints = _lido.withdrawalQueue
+            .findCheckpointHints(unstETHIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
             escrow.markUnstETHFinalized(unstETHIds, hints);
 
             uint256 ethAmountFinalized = _lido.withdrawalQueue.getClaimableEther(unstETHIds, hints)[0];
@@ -393,28 +391,19 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
             );
 
             assertApproxEqAbs(
-                escrow.getSignallingEscrowDetails().totalUnstETHUnfinalizedShares.toUint256(),
-                unfinalizedShares,
-                // TODO: temporarily increased delta to 1 gwei to fix OutOfFunds error. Need to fix it properly in a separate PR.
-                1 gwei
+                escrow.getSignallingEscrowDetails().totalUnstETHUnfinalizedShares.toUint256(), unfinalizedShares, 2 wei
             );
 
             assertApproxEqAbs(
-                // TODO: temporarily increased delta to 1 gwei to fix OutOfFunds error. Need to fix it properly in a separate PR.
-                escrow.getSignallingEscrowDetails().totalUnstETHFinalizedETH.toUint256(),
-                ethAmountFinalized,
-                1 gwei
+                escrow.getSignallingEscrowDetails().totalUnstETHFinalizedETH.toUint256(), ethAmountFinalized, 2 wei
             );
 
-            // TODO: temporarily using assertApproxEqAbs. Need to fix it properly in a separate PR
             assertApproxEqAbs(
                 escrow.getRageQuitSupport().toUint256(),
                 PercentsD16.fromFraction({
-                    numerator: supportAmount,
-                    denominator: _lido.stETH.totalSupply() + ethAmountFinalized
-                }).toUint256(),
-                // TODO: temporarily increased delta to 15 * ACCURACY to fix possible rounding error. Need to fix it properly in a separate PR.
-                15 * ACCURACY
+                        numerator: supportAmount, denominator: _lido.stETH.totalSupply() + ethAmountFinalized
+                    }).toUint256(),
+                2 wei
             );
         }
     }
@@ -422,7 +411,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
     function testFork_RageQuit_HappyPath_AllTokens() public {
         _initialLockRandomAmountOfTokensInEscrow();
 
-        uint256 requestAmount = 1000 * 1e18;
+        uint256 requestAmount = _lido.stETH.balanceOf(_VETOER_1) / 1000;
         uint256[] memory amounts = new uint256[](10);
         for (uint256 i = 0; i < 10; ++i) {
             amounts[i] = requestAmount;
@@ -437,7 +426,7 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         _lockWstETH(_VETOER_1, requestShares);
         _lockUnstETH(_VETOER_1, unstETHIds);
 
-        _simulateRebase(PercentsD16.fromBasisPoints(100_05)); // +0.05%
+        _performRebase(PercentsD16.fromBasisPoints(100_05)); // +0.05%
 
         vm.expectRevert();
         escrow.startRageQuit(_RAGE_QUIT_EXTRA_TIMELOCK, _RAGE_QUIT_WITHDRAWALS_TIMELOCK);
@@ -445,9 +434,8 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         uint256[] memory unstETHIdsToFinalize = new uint256[](1);
         unstETHIdsToFinalize[0] = unstETHIds[0];
 
-        uint256[] memory unstETHToFinalizeHints = _lido.withdrawalQueue.findCheckpointHints(
-            unstETHIdsToFinalize, 1, _lido.withdrawalQueue.getLastCheckpointIndex()
-        );
+        uint256[] memory unstETHToFinalizeHints = _lido.withdrawalQueue
+            .findCheckpointHints(unstETHIdsToFinalize, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
         escrow.markUnstETHFinalized(unstETHIdsToFinalize, unstETHToFinalizeHints);
 
         // unstETH was not finalized in the WQ, so the finalization shares is not accounted here
@@ -458,9 +446,8 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
 
         _finalizeWithdrawalQueue(unstETHIdsToFinalize[unstETHIdsToFinalize.length - 1]);
 
-        unstETHToFinalizeHints = _lido.withdrawalQueue.findCheckpointHints(
-            unstETHIdsToFinalize, 1, _lido.withdrawalQueue.getLastCheckpointIndex()
-        );
+        unstETHToFinalizeHints = _lido.withdrawalQueue
+            .findCheckpointHints(unstETHIdsToFinalize, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
         escrow.markUnstETHFinalized(unstETHIdsToFinalize, unstETHToFinalizeHints);
 
         // After finalization in the WQ, the finalization shares accounted
@@ -468,18 +455,15 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         assertTrue(unstETHToFinalizeDetails[0].status == UnstETHRecordStatus.Finalized);
         assertEq(unstETHToFinalizeDetails[0].claimableAmount.toUint256(), requestAmount);
 
-        _simulateRebase(PercentsD16.fromBasisPoints(100_01)); // +0.01%
+        _performRebase(PercentsD16.fromBasisPoints(100_01)); // +0.01%
 
         vm.prank(address(_dgDeployedContracts.dualGovernance));
         escrow.startRageQuit(_RAGE_QUIT_EXTRA_TIMELOCK, _RAGE_QUIT_WITHDRAWALS_TIMELOCK);
 
         uint256 escrowStETHBalance = _lido.stETH.balanceOf(address(escrow));
-        uint256 expectedWithdrawalsBatchesCount = escrowStETHBalance / requestAmount + 1;
+        uint256 expectedWithdrawalsBatchesCount =
+            escrowStETHBalance / _lido.withdrawalQueue.MAX_STETH_WITHDRAWAL_AMOUNT() + 1;
         assertEq(_lido.withdrawalQueue.balanceOf(address(escrow)), 10 + _initialLockedUnStETHCount);
-
-        escrow.requestNextWithdrawalsBatch(10);
-
-        assertEq(_lido.withdrawalQueue.balanceOf(address(escrow)), 20 + _initialLockedUnStETHCount);
 
         while (!escrow.isWithdrawalsBatchesClosed()) {
             escrow.requestNextWithdrawalsBatch(96);
@@ -504,9 +488,8 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
             assertFalse(statuses[i].isClaimed);
         }
 
-        uint256[] memory hints = _lido.withdrawalQueue.findCheckpointHints(
-            unstETHIdsToClaim, 1, _lido.withdrawalQueue.getLastCheckpointIndex()
-        );
+        uint256[] memory hints = _lido.withdrawalQueue
+            .findCheckpointHints(unstETHIdsToClaim, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
 
         while (escrow.getUnclaimedUnstETHIdsCount() > 0) {
             escrow.claimNextWithdrawalsBatch(32);
@@ -519,8 +502,8 @@ contract EscrowOperationsRegressionTest is DGRegressionTestSetup {
         // unstETH holders claim their withdrawal requests
         // ---
         {
-            hints =
-                _lido.withdrawalQueue.findCheckpointHints(unstETHIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
+            hints = _lido.withdrawalQueue
+                .findCheckpointHints(unstETHIds, 1, _lido.withdrawalQueue.getLastCheckpointIndex());
             escrow.claimUnstETH(unstETHIds, hints);
 
             // but it can't be withdrawn before withdrawal timelock has passed

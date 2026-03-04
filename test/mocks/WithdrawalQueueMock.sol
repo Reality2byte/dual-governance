@@ -3,7 +3,7 @@ pragma solidity 0.8.26;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWithdrawalQueue} from "contracts/interfaces/IWithdrawalQueue.sol";
-import {ETHValues, sendTo} from "contracts/types/ETHValue.sol";
+import {ETHValues} from "contracts/types/ETHValue.sol";
 
 /* solhint-disable no-unused-vars,custom-errors */
 contract WithdrawalQueueMock is IWithdrawalQueue {
@@ -59,11 +59,9 @@ contract WithdrawalQueueMock is IWithdrawalQueue {
         return _lastFinalizedRequestId;
     }
 
-    function getWithdrawalStatus(uint256[] calldata /* _requestIds */ )
-        external
-        view
-        returns (WithdrawalRequestStatus[] memory)
-    {
+    function getWithdrawalStatus(
+        uint256[] calldata /* _requestIds */
+    ) external view returns (WithdrawalRequestStatus[] memory) {
         return _withdrawalRequestsStatuses;
     }
 
@@ -117,11 +115,27 @@ contract WithdrawalQueueMock is IWithdrawalQueue {
         return _requestWithdrawalsResult;
     }
 
-    function balanceOf(address /* owner */ ) external pure returns (uint256 /* balance */ ) {
+    function balanceOf(
+        address /* owner */
+    )
+        external
+        pure
+        returns (
+            uint256 /* balance */
+        )
+    {
         revert("Not Implemented");
     }
 
-    function ownerOf(uint256 /* tokenId */ ) external pure returns (address /* owner */ ) {
+    function ownerOf(
+        uint256 /* tokenId */
+    )
+        external
+        pure
+        returns (
+            address /* owner */
+        )
+    {
         revert("Not Implemented");
     }
 
@@ -134,29 +148,63 @@ contract WithdrawalQueueMock is IWithdrawalQueue {
         revert("Not Implemented");
     }
 
-    function safeTransferFrom(address, /* from */ address, /* to */ uint256 /* tokenId */ ) external pure {
+    function safeTransferFrom(
+        address,
+        /* from */
+        address,
+        /* to */
+        uint256 /* tokenId */
+    ) external pure {
         revert("Not Implemented");
     }
 
-    function transferFrom(address, /* from */ address, /* to */ uint256 /* tokenId */ ) external pure {}
+    function transferFrom(
+        address,
+        /* from */
+        address,
+        /* to */
+        uint256 /* tokenId */
+    ) external pure {}
 
-    function approve(address, /* to */ uint256 /* tokenId */ ) external pure {
+    function approve(
+        address,
+        /* to */
+        uint256 /* tokenId */
+    ) external pure {
         revert("Not Implemented");
     }
 
-    function setApprovalForAll(address, /* operator */ bool /* approved */ ) external pure {
+    function setApprovalForAll(
+        address,
+        /* operator */
+        bool /* approved */
+    ) external pure {
         revert("Not Implemented");
     }
 
-    function getApproved(uint256 /* tokenId */ ) external pure returns (address /* operator */ ) {
+    function getApproved(
+        uint256 /* tokenId */
+    )
+        external
+        pure
+        returns (
+            address /* operator */
+        )
+    {
         revert("Not Implemented");
     }
 
-    function isApprovedForAll(address, /* owner */ address /* operator */ ) external pure returns (bool) {
+    function isApprovedForAll(
+        address,
+        /* owner */
+        address /* operator */
+    ) external pure returns (bool) {
         revert("Not Implemented");
     }
 
-    function supportsInterface(bytes4 /* interfaceId */ ) external pure returns (bool) {
+    function supportsInterface(
+        bytes4 /* interfaceId */
+    ) external pure returns (bool) {
         revert("Not Implemented");
     }
 

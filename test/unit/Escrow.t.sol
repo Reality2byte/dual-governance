@@ -26,7 +26,7 @@ import {IDualGovernance} from "contracts/interfaces/IDualGovernance.sol";
 import {IWithdrawalQueue} from "contracts/interfaces/IWithdrawalQueue.sol";
 
 import {StETHMock} from "scripts/lido-mocks/StETHMock.sol";
-import {WstETHMock} from "test/mocks/WstETHMock.sol";
+import {WstETHMock} from "scripts/lido-mocks/WstETHMock.sol";
 import {WithdrawalQueueMock} from "test/mocks/WithdrawalQueueMock.sol";
 import {UnitTest} from "test/utils/unit-test.sol";
 import {Random} from "test/utils/random.sol";
@@ -655,9 +655,9 @@ contract EscrowUnitTests is UnitTest {
         assertEq(
             _escrow.getRageQuitSupport().toUint256(),
             PercentsD16.fromFraction({
-                numerator: _stETH.getPooledEthByShares(unstethShares1 + unstethShares2),
-                denominator: _stETH.totalSupply()
-            }).toUint256()
+                    numerator: _stETH.getPooledEthByShares(unstethShares1 + unstethShares2),
+                    denominator: _stETH.totalSupply()
+                }).toUint256()
         );
 
         assertTrue(_escrow.getEscrowState() == EscrowState.SignallingEscrow);
@@ -698,9 +698,9 @@ contract EscrowUnitTests is UnitTest {
         assertEq(
             support.toUint256(),
             PercentsD16.fromFraction({
-                numerator: unstETHAmounts[0] + unstETHAmounts[1],
-                denominator: _stETH.totalSupply() + unstETHAmounts[0] + unstETHAmounts[1]
-            }).toUint256()
+                    numerator: unstETHAmounts[0] + unstETHAmounts[1],
+                    denominator: _stETH.totalSupply() + unstETHAmounts[0] + unstETHAmounts[1]
+                }).toUint256()
         );
     }
 
@@ -809,8 +809,9 @@ contract EscrowUnitTests is UnitTest {
         _escrow.requestNextWithdrawalsBatch(100);
     }
 
-    function test_requestNextWithdrawalsBatch_ReturnsEarlyAndClosesWithdrawalsBatchesQueue_When_EscrowHasZeroAmountOfStETH(
-    ) external {
+    function test_requestNextWithdrawalsBatch_ReturnsEarlyAndClosesWithdrawalsBatchesQueue_When_EscrowHasZeroAmountOfStETH()
+        external
+    {
         _transitToRageQuit();
 
         _withdrawalQueue.setRequestWithdrawalsResult(new uint256[](0));
@@ -2015,9 +2016,10 @@ contract EscrowUnitTests is UnitTest {
     // ---
 
     function _createEscrow(uint256 size, Duration maxMinAssetsLockDuration) internal returns (Escrow) {
-        return new Escrow(
-            _stETH, _wstETH, _withdrawalQueue, IDualGovernance(_dualGovernance), size, maxMinAssetsLockDuration
-        );
+        return
+            new Escrow(
+                _stETH, _wstETH, _withdrawalQueue, IDualGovernance(_dualGovernance), size, maxMinAssetsLockDuration
+            );
     }
 
     function _createEscrowProxy(uint256 minWithdrawalsBatchSize) internal returns (Escrow) {

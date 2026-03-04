@@ -35,15 +35,18 @@ import {ISealable} from "test/utils/interfaces/ISealable.sol";
 import {UnstETHRecordStatus} from "contracts/libraries/AssetsAccounting.sol";
 
 import {
+    DGSetupDeployConfig,
+    DGSetupDeployArtifacts,
+    DGSetupDeployedContracts
+} from "scripts/utils/deployment/Setup.sol";
+import {TimelockContractDeployConfig} from "scripts/utils/deployment/Timelock.sol";
+
+import {
     ContractsDeployment,
     TGSetupDeployConfig,
     DualGovernanceConfig,
     TGSetupDeployedContracts,
-    DGSetupDeployConfig,
-    DGSetupDeployArtifacts,
-    DGSetupDeployedContracts,
-    DualGovernanceContractDeployConfig,
-    TimelockContractDeployConfig
+    DualGovernanceContractDeployConfig
 } from "scripts/utils/contracts-deployment.sol";
 import {TiebreakerDeployConfig, TiebreakerSubCommitteeDeployConfig} from "scripts/utils/deployment/Tiebreaker.sol";
 
@@ -81,8 +84,29 @@ abstract contract ForkTestSetup is Test {
             vm.createSelectFork(vm.envString("HOODI_RPC_URL"));
             _lido = LidoUtils.hoodi();
         } else {
-            revert UnsupportedChainId(chainId);
+            vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
+            _lido = LidoUtils.devnetDeployment(
+                LidoUtils.DevnetDeploymentParams({
+                    stEth: vm.envAddress("DG_TESTS_LIDO_ST_ETH"),
+                    wstETH: vm.envAddress("DG_TESTS_LIDO_WST_ETH"),
+                    burner: vm.envAddress("DG_TESTS_LIDO_BURNER"),
+                    hashConsensus: vm.envAddress("DG_TESTS_LIDO_HASH_CONSENSUS"),
+                    withdrawalQueue: vm.envAddress("DG_TESTS_LIDO_WITHDRAWAL_QUEUE"),
+                    accountingOracle: vm.envAddress("DG_TESTS_LIDO_ACCOUNTING_ORACLE"),
+                    oracleReportSanityChecker: vm.envAddress("DG_TESTS_LIDO_ORACLE_REPORT_SANITY_CHECKER"),
+                    stakingRouter: vm.envAddress("DG_TESTS_LIDO_STAKING_ROUTER"),
+                    elRewardsVault: vm.envAddress("DG_TESTS_LIDO_EL_REWARDS_VAULT"),
+                    withdrawalVault: vm.envAddress("DG_TESTS_LIDO_WITHDRAWAL_VAULT"),
+                    daoAcl: vm.envAddress("DG_TESTS_LIDO_DAO_ACL"),
+                    daoAgent: vm.envAddress("DG_TESTS_LIDO_DAO_AGENT"),
+                    voting: vm.envAddress("DG_TESTS_LIDO_DAO_VOTING"),
+                    ldoToken: vm.envAddress("DG_TESTS_LIDO_LDO_TOKEN"),
+                    daoTokenManager: vm.envAddress("DG_TESTS_LIDO_DAO_TOKEN_MANAGER"),
+                    lidoLocator: vm.envAddress("DG_TESTS_LIDO_LOCATOR")
+                })
+            );
         }
+
         if (blockNumber != LATEST_FORK_BLOCK_NUMBER) {
             vm.rollFork(blockNumber);
         }
@@ -97,7 +121,7 @@ abstract contract ForkTestSetup is Test {
         } else if (chainId == HOODI_CHAIN_ID) {
             return _readBlockNumberFromEnvOrDefault("HOODI_FORK_BLOCK_NUMBER", DEFAULT_HOODI_FORK_BLOCK_NUMBER);
         }
-        revert UnsupportedChainId(chainId);
+        return _readBlockNumberFromEnvOrDefault("DG_DEVNET_FORK_BLOCK_NUMBER", DEFAULT_MAINNET_FORK_BLOCK_NUMBER);
     }
 
     function _readBlockNumberFromEnvOrDefault(
@@ -238,9 +262,7 @@ contract GovernedTimelockSetup is ForkTestSetup, TestingAssertEqExtender {
     function _getMaliciousCalls() internal view returns (ExternalCall[] memory calls) {
         calls = new ExternalCall[](1);
         calls[0] = ExternalCall({
-            target: address(_targetMock),
-            value: 0,
-            payload: abi.encodeCall(IPotentiallyDangerousContract.doRugPool, ())
+            target: address(_targetMock), value: 0, payload: abi.encodeCall(IPotentiallyDangerousContract.doRugPool, ())
         });
     }
 
@@ -470,8 +492,9 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
             }
         }
 
-        address[] memory sealableWithdrawalBlockers = new address[](1);
+        address[] memory sealableWithdrawalBlockers = new address[](2);
         sealableWithdrawalBlockers[0] = address(_lido.withdrawalQueue);
+        sealableWithdrawalBlockers[1] = address(_lido.vebo);
 
         config = DGSetupDeployConfig.Context({
             chainId: 1,
@@ -495,9 +518,7 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
             }),
             dualGovernance: DualGovernanceContractDeployConfig.Context({
                 signallingTokens: DualGovernance.SignallingTokens({
-                    stETH: _lido.stETH,
-                    wstETH: _lido.wstETH,
-                    withdrawalQueue: _lido.withdrawalQueue
+                    stETH: _lido.stETH, wstETH: _lido.wstETH, withdrawalQueue: _lido.withdrawalQueue
                 }),
                 sanityCheckParams: DualGovernance.SanityCheckParams({
                     minWithdrawalsBatchSize: 4,
@@ -672,7 +693,6 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
         _dgDeployConfig.dualGovernance = config.dualGovernance;
         _dgDeployConfig.dualGovernanceConfigProvider = config.dualGovernanceConfigProvider;
 
-        _dgDeployConfig.tiebreaker.chainId = config.chainId;
         _dgDeployConfig.tiebreaker.quorum = config.tiebreaker.quorum;
         _dgDeployConfig.tiebreaker.executionDelay = config.tiebreaker.executionDelay;
 
@@ -731,8 +751,8 @@ contract DGScenarioTestSetup is GovernedTimelockSetup {
         _lido.finalizeWithdrawalQueue(id);
     }
 
-    function _simulateRebase(PercentD16 rebaseFactor) internal {
-        _lido.simulateRebase(rebaseFactor);
+    function _performRebase(PercentD16 rebaseFactor) internal {
+        _lido.performRebase(rebaseFactor);
     }
 
     function _resealSealable(address sealable) internal {
@@ -1179,10 +1199,7 @@ contract TGScenarioTestSetup is GovernedTimelockSetup {
         proposalId = _submitProposal(address(_tgDeployedContracts.timelockedGovernance.GOVERNANCE()), calls, metadata);
     }
 
-    function _adoptProposal(
-        ExternalCall[] memory calls,
-        string memory metadata
-    ) internal returns (uint256 proposalId) {
+    function _adoptProposal(ExternalCall[] memory calls, string memory metadata) internal returns (uint256 proposalId) {
         proposalId = _adoptProposal(address(_tgDeployedContracts.timelockedGovernance.GOVERNANCE()), calls, metadata);
     }
 }

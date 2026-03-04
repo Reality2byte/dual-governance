@@ -4,8 +4,6 @@ pragma solidity 0.8.26;
 import {UnitTest} from "test/utils/unit-test.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {Vm} from "forge-std/Test.sol";
-
 import {HashConsensus} from "contracts/committees/HashConsensus.sol";
 import {Duration, Durations} from "contracts/types/Duration.sol";
 import {Timestamp, Timestamps} from "contracts/types/Timestamp.sol";

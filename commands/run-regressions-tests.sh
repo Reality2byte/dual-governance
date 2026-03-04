@@ -16,5 +16,8 @@ fi
 export GRANT_REQUIRED_PERMISSIONS=false
 export RUN_SOLVENCY_SIMULATION_TEST=false
 export ENABLE_REGRESSION_TEST_COMPLETE_RAGE_QUIT=false
+export RUN_DISCONNECTED_DG_SETUP_TEST=false
 
-forge test -vv --match-path "test/regressions/*"
+FUZZ_RUNS="${FUZZ_RUNS:-256}"
+
+forge test -vv --match-path "test/regressions/*" --fuzz-runs $FUZZ_RUNS

@@ -12,22 +12,20 @@ import {ITiebreaker} from "contracts/interfaces/ITiebreaker.sol";
 import {IEscrowBase} from "contracts/interfaces/IEscrowBase.sol";
 import {ISignallingEscrow} from "contracts/interfaces/ISignallingEscrow.sol";
 import {TiebreakerCoreCommittee} from "contracts/committees/TiebreakerCoreCommittee.sol";
-import {TiebreakerSubCommittee} from "contracts/committees/TiebreakerSubCommittee.sol";
 import {TimelockedGovernance} from "contracts/TimelockedGovernance.sol";
 import {IDualGovernance} from "contracts/interfaces/IDualGovernance.sol";
 import {Escrow} from "contracts/Escrow.sol";
 import {DualGovernanceConfig} from "contracts/libraries/DualGovernanceConfig.sol";
 import {State as EscrowState} from "contracts/libraries/EscrowState.sol";
 
-import {EmergencyProtectedTimelock} from "contracts/EmergencyProtectedTimelock.sol";
 import {
     DGSetupDeployConfig,
     DGSetupDeployArtifacts,
-    DGSetupDeployedContracts,
-    TimelockContractDeployConfig
-} from "../utils/contracts-deployment.sol";
+    DGSetupDeployedContracts
+} from "scripts/utils/deployment/Setup.sol";
+import {TimelockContractDeployConfig} from "scripts/utils/deployment/Timelock.sol";
 
-import {TiebreakerDeployConfig, TiebreakerSubCommitteeDeployConfig} from "../utils/deployment/Tiebreaker.sol";
+import {TiebreakerDeployConfig} from "../utils/deployment/Tiebreaker.sol";
 
 library DeployVerification {
     function verify(DGSetupDeployArtifacts.Context memory deployArtifact) internal view {

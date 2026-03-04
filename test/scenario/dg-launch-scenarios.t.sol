@@ -7,8 +7,7 @@ import {console} from "forge-std/console.sol";
 import {LidoUtils, DGScenarioTestSetup} from "../utils/integration-tests.sol";
 import {TimelockedGovernance, ContractsDeployment} from "scripts/utils/contracts-deployment.sol";
 
-import {Durations} from "contracts/types/Duration.sol";
-import {Timestamps, Timestamp} from "contracts/types/Timestamp.sol";
+import {Timestamps} from "contracts/types/Timestamp.sol";
 
 import {DeployVerification} from "scripts/utils/DeployVerification.sol";
 
@@ -34,8 +33,9 @@ contract DGLaunchStrategiesScenarioTest is DGScenarioTestSetup {
             _deployDGSetup({emergencyGovernanceProposer: _TEMPORARY_EMERGENCY_GOVERNANCE_PROPOSER});
             _deployArtifact.deployConfig = _dgDeployConfig;
             _deployArtifact.deployedContracts = _dgDeployedContracts;
-            _emergencyGovernance =
-                ContractsDeployment.deployTimelockedGovernance({governance: address(_lido.voting), timelock: _timelock});
+            _emergencyGovernance = ContractsDeployment.deployTimelockedGovernance({
+                governance: address(_lido.voting), timelock: _timelock
+            });
         }
 
         _step("1. Verify the state of the DG setup before the dry-run emergency reset");
@@ -134,9 +134,10 @@ contract DGLaunchStrategiesScenarioTest is DGScenarioTestSetup {
             if (runScriptRoleManager != address(_lido.voting)) {
                 vm.startPrank(runScriptRoleManager);
                 {
-                    _lido.acl.setPermissionManager(
-                        address(_lido.voting), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE()
-                    );
+                    _lido.acl
+                        .setPermissionManager(
+                            address(_lido.voting), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE()
+                        );
                 }
                 vm.stopPrank();
             }
@@ -147,9 +148,8 @@ contract DGLaunchStrategiesScenarioTest is DGScenarioTestSetup {
             if (executeRoleManager != address(_lido.voting)) {
                 vm.startPrank(executeRoleManager);
                 {
-                    _lido.acl.setPermissionManager(
-                        address(_lido.voting), address(_lido.agent), _lido.agent.EXECUTE_ROLE()
-                    );
+                    _lido.acl
+                        .setPermissionManager(address(_lido.voting), address(_lido.agent), _lido.agent.EXECUTE_ROLE());
                 }
                 vm.stopPrank();
             }
@@ -201,7 +201,8 @@ contract DGLaunchStrategiesScenarioTest is DGScenarioTestSetup {
                 forwarder: address(_lido.agent),
                 target: address(_lido.acl),
                 payload: abi.encodeCall(
-                    _lido.acl.revokePermission, (address(_lido.voting), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE())
+                    _lido.acl.revokePermission,
+                    (address(_lido.voting), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE())
                 )
             });
 
@@ -247,12 +248,12 @@ contract DGLaunchStrategiesScenarioTest is DGScenarioTestSetup {
         _step("10. Verify that Voting has no permission to forward to Agent");
         {
             bytes memory revokePermissionScript = CallsScriptBuilder.create(
-                address(_lido.acl),
-                abi.encodeCall(
-                    _lido.acl.revokePermission,
-                    (_getAdminExecutor(), (address(_lido.agent)), _lido.agent.RUN_SCRIPT_ROLE())
-                )
-            ).getResult();
+                    address(_lido.acl),
+                    abi.encodeCall(
+                        _lido.acl.revokePermission,
+                        (_getAdminExecutor(), (address(_lido.agent)), _lido.agent.RUN_SCRIPT_ROLE())
+                    )
+                ).getResult();
 
             vm.prank(address(_lido.voting));
             vm.expectRevert("AGENT_CAN_NOT_FORWARD");
@@ -281,9 +282,10 @@ contract DGLaunchStrategiesScenarioTest is DGScenarioTestSetup {
             if (runScriptRoleManager != address(_lido.voting)) {
                 vm.startPrank(runScriptRoleManager);
                 {
-                    _lido.acl.setPermissionManager(
-                        address(_lido.voting), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE()
-                    );
+                    _lido.acl
+                        .setPermissionManager(
+                            address(_lido.voting), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE()
+                        );
                 }
                 vm.stopPrank();
             }
@@ -300,9 +302,8 @@ contract DGLaunchStrategiesScenarioTest is DGScenarioTestSetup {
             if (executeRoleManager != address(_lido.voting)) {
                 vm.startPrank(executeRoleManager);
                 {
-                    _lido.acl.setPermissionManager(
-                        address(_lido.voting), address(_lido.agent), _lido.agent.EXECUTE_ROLE()
-                    );
+                    _lido.acl
+                        .setPermissionManager(address(_lido.voting), address(_lido.agent), _lido.agent.EXECUTE_ROLE());
                 }
                 vm.stopPrank();
             }
@@ -426,9 +427,8 @@ contract DGLaunchStrategiesScenarioTest is DGScenarioTestSetup {
                 _lido.acl.hasPermission(address(_getAdminExecutor()), address(_lido.agent), _lido.agent.EXECUTE_ROLE())
             );
             assertTrue(
-                _lido.acl.hasPermission(
-                    address(_getAdminExecutor()), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE()
-                )
+                _lido.acl
+                    .hasPermission(address(_getAdminExecutor()), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE())
             );
 
             uint256 launchProposalId = 1;
@@ -452,9 +452,8 @@ contract DGLaunchStrategiesScenarioTest is DGScenarioTestSetup {
                 _lido.acl.hasPermission(address(_getAdminExecutor()), address(_lido.agent), _lido.agent.EXECUTE_ROLE())
             );
             assertTrue(
-                _lido.acl.hasPermission(
-                    address(_getAdminExecutor()), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE()
-                )
+                _lido.acl
+                    .hasPermission(address(_getAdminExecutor()), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE())
             );
 
             assertEq(
@@ -514,9 +513,8 @@ contract DGLaunchStrategiesScenarioTest is DGScenarioTestSetup {
                 _lido.acl.hasPermission(address(_getAdminExecutor()), address(_lido.agent), _lido.agent.EXECUTE_ROLE())
             );
             assertTrue(
-                _lido.acl.hasPermission(
-                    address(_getAdminExecutor()), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE()
-                )
+                _lido.acl
+                    .hasPermission(address(_getAdminExecutor()), address(_lido.agent), _lido.agent.RUN_SCRIPT_ROLE())
             );
 
             assertEq(
@@ -534,7 +532,11 @@ contract DGLaunchStrategiesScenarioTest is DGScenarioTestSetup {
 contract MockRolesVerifier {
     event AllRolesVerified();
 
-    function validate(address, /* dgAdminExecutor */ address /* dgResealManager */ ) external {
+    function validate(
+        address,
+        /* dgAdminExecutor */
+        address /* dgResealManager */
+    ) external {
         emit AllRolesVerified();
     }
 }
@@ -542,7 +544,11 @@ contract MockRolesVerifier {
 contract MockDGStateVerifier {
     event DGStateVerified();
 
-    function validate(address, /* dualGovernance */ address /* timelock */ ) external {
+    function validate(
+        address,
+        /* dualGovernance */
+        address /* timelock */
+    ) external {
         emit DGStateVerified();
     }
 }

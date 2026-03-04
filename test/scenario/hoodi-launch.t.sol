@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {
-    Durations,
-    Timestamps,
-    ContractsDeployment,
-    DGScenarioTestSetup,
-    HOODI_CHAIN_ID
-} from "test/utils/integration-tests.sol";
+import {DGScenarioTestSetup, HOODI_CHAIN_ID} from "test/utils/integration-tests.sol";
 import {LidoUtils} from "test/utils/lido-utils.sol";
 
 import {TimeConstraints} from "scripts/launch/TimeConstraints.sol";
@@ -76,10 +70,12 @@ contract HoodiLaunch is DGScenarioTestSetup, LidoAddressesHoodi {
                     emergencyGovernance: address(_dgDeployedContracts.emergencyGovernance),
                     emergencyActivationCommittee: _dgDeployedContracts.timelock.getEmergencyActivationCommittee(),
                     emergencyExecutionCommittee: _dgDeployedContracts.timelock.getEmergencyExecutionCommittee(),
-                    emergencyProtectionEndDate: _dgDeployedContracts.timelock.getEmergencyProtectionDetails()
-                        .emergencyProtectionEndsAfter,
-                    emergencyModeDuration: _dgDeployedContracts.timelock.getEmergencyProtectionDetails()
-                        .emergencyModeDuration,
+                    emergencyProtectionEndDate: _dgDeployedContracts.timelock
+                    .getEmergencyProtectionDetails()
+                    .emergencyProtectionEndsAfter,
+                    emergencyModeDuration: _dgDeployedContracts.timelock
+                    .getEmergencyProtectionDetails()
+                    .emergencyModeDuration,
                     proposalsCount: 1
                 })
             );
